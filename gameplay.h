@@ -149,7 +149,7 @@ public:
         emit onSend(network::nwLoadGame, m_pNetwork->localPlayerName(), "Name="+fileName);
     }
     Q_INVOKABLE void loadDictionary(const QString fileName, const QString categories) { m_pDictionary->loadDictionary(fileName, categories); }
-    Q_INVOKABLE bool canResign() const { return m_bIsRunning && !m_bIsConnected && !m_bIsHistory && m_nPlayerCount == 2; }
+    Q_INVOKABLE bool canResign() const { return m_bIsRunning && !m_bIsConnected && !m_bIsHistory && m_nPlayerCount == 2 && m_nCurrentMove > 0; } // game course must have at least one move
     Q_INVOKABLE void resign(); // FISF 4.11: "J'abandonne", opponent has to agree
     Q_INVOKABLE void deleteDictionary(const QString fileName) { m_pDicListModel->deleteDic(fileName); }
     Q_INVOKABLE void setCategoryChecked(const QString catName, const bool isChecked, const bool doReset = false)

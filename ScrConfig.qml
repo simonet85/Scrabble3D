@@ -225,13 +225,13 @@ Window {
 
         //configWordCheck
         configWordCheck.rbTakeback.checked = getConfigValue("rbTakeback",
-                                                            "true") === "true"
+                                                            "false") === "true" //French default: challenge
         configWordCheck.rbPoll.checked = getConfigValue("rbPoll",
                                                         "false") === "true"
         configWordCheck.rbChallenge.checked = getConfigValue("rbChallenge",
-                                                             "false") === "true"
-        configWordCheck.sbPeriod.value = getConfigValue("sbPeriod", 10)
-        configWordCheck.sbPenalty.value = getConfigValue("sbPenalty", 10)
+                                                             "true") === "true" //French default (FISF 3.5)
+        configWordCheck.sbPeriod.value = getConfigValue("sbPeriod", 20)
+        configWordCheck.sbPenalty.value = getConfigValue("sbPenalty", 5) //FISF 3.5.3
         configWordCheck.sbBonus.value = getConfigValue("sbBonus", 0)
         configWordCheck.cbClabbers.checked = getConfigValue("cbClabbers",
                                                             "false") === "true"
