@@ -14,6 +14,7 @@ Rectangle {
     property color bonusBottom: "transparent"
 
     property string bonusCaption: "" //e.g. "TRIPLE\nWORD", shown on empty premium squares
+    property bool pieceIsStart: false //start square shows a star when empty
     property bool isEmpty: pieceLabel === String.fromCharCode(0)
 
     property int cMarkerSize: width/5
@@ -28,10 +29,20 @@ Rectangle {
         text: bonusCaption
         anchors.centerIn: parent
         horizontalAlignment: Text.AlignHCenter
-        // fixed size: Text.Fit with a reduced lineHeight loops forever in Qt 6.8
-        font.pixelSize: bonusCaption.length === 1 ? parent.height * 0.6 : parent.width * 0.17
+        font.pixelSize: parent.width * 0.17
         font.bold: true
         color: isDark(parent.color) ? "white" : "#1a1a1a"
+    }
+    // an image, not the "★" character: on Windows that glyph falls back to an emoji font
+    // and, drawn large with the hardware renderer, it blocks the application at startup
+    Image {
+        visible: isEmpty && pieceIsStart
+        anchors.centerIn: parent
+        width: parent.width * 0.6
+        height: width
+        sourceSize.width: 64
+        sourceSize.height: 64
+        source: "qrc:///resources/star.png"
     }
 
     Text {

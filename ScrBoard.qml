@@ -16,7 +16,7 @@ Item {
     }
 
     // short caption written on empty premium squares, indexed by field type
-    readonly property var bonusCaptions: ["★", "", qsTr("DOUBLE\nLETTER"), qsTr("TRIPLE\nLETTER"),
+    readonly property var bonusCaptions: ["", "", qsTr("DOUBLE\nLETTER"), qsTr("TRIPLE\nLETTER"),
         qsTr("QUAD\nLETTER"), qsTr("DOUBLE\nWORD"), qsTr("TRIPLE\nWORD"), qsTr("QUAD\nWORD")]
     onWidthChanged: updateFieldSize();
     onHeightChanged: updateFieldSize();
@@ -84,6 +84,7 @@ Item {
             pieceIsJoker: isJoker
             pieceIsRandom: isRandom
             bonusCaption: bonusCaptions[fieldtype] ?? ""
+            pieceIsStart: fieldtype === 0
             // white grid lines between the squares, like a printed board
             border.color: isEmpty ? "#eef5ee" : Qt.darker(color, 1.15)
             border.width: Math.max(1, Math.round(fieldSize * 0.035))
