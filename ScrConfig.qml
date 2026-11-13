@@ -202,7 +202,7 @@ Window {
 
         //letters
         configLetter.cbLetterSet.currentIndex = -1
-        configLetter.cbLetterSet.currentIndex = getConfigValue("cbLetterSet", 0)
+        configLetter.cbLetterSet.currentIndex = getConfigValue("cbLetterSet", 2) //2 = French (default)
         //load letter set before dictionary to suppress warning of different letter sets
         if (configLetter.cbLetterSet.currentIndex === -1) {
             var aLetters = []
@@ -266,7 +266,7 @@ Window {
         configRules.slPerformance.value = getConfigValue("slPerformance", 10)
 
         // dictionary
-        var aFileName = getConfigValue("dictionary", "")
+        var aFileName = getConfigValue("dictionary", "francais.dic") //French by default
         var aCategories = getConfigValue("categories", "")
         if (aFileName !== configDictionary.dictionaryFile)
             GamePlay.loadDictionary(aFileName, aCategories)
