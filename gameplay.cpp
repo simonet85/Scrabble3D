@@ -443,8 +443,12 @@ void GamePlay::nextPlayer(const bool bIsLoading)
     m_pBoard->placeLetters();
     m_pBoardModel->updateAllSquares();
 
-    if (!m_bIsRunning) //game has ended
+    if (!m_bIsRunning) { //game has ended
+        // final scores (last move and end-of-game adjustments) for the status bar
+        emit statInfoChanged();
+        emit statTotalChanged();
         return;
+    }
 
     //new pieces for the placed or marked to exchange
     doUpdateRack();

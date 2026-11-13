@@ -6,13 +6,18 @@ Item {
     anchors.fill: parent
 
     property int fieldSize
+    property int labelSize: Math.round(fieldSize * 0.6) //coordinates frame around the board
     property alias jokerPicker: jokerPicker //alias needed for newgame > updatemodel
 
+    // board frame: 2 label rows/columns, then a gap and the rack below the board
     function updateFieldSize() {
-        fieldSize = height < width
-                  ? height / (GamePlay.boardSize+2.5)
-                  : width / (GamePlay.boardSize+1.5)
+        fieldSize = Math.min(height / (GamePlay.boardSize + 2.6),
+                             width / (GamePlay.boardSize + 1.3))
     }
+
+    // short caption written on empty premium squares, indexed by field type
+    readonly property var bonusCaptions: ["", "", qsTr("DOUBLE\nLETTER"), qsTr("TRIPLE\nLETTER"),
+        qsTr("QUAD\nLETTER"), qsTr("DOUBLE\nWORD"), qsTr("TRIPLE\nWORD"), qsTr("QUAD\nWORD")]
     onWidthChanged: updateFieldSize();
     onHeightChanged: updateFieldSize();
 
@@ -43,16 +48,15 @@ Item {
 
     Component {
         id: labelDelegate
-        Rectangle {
-            implicitWidth: fieldSize
-            implicitHeight: fieldSize
-            color: "transparent"
-            border.color: Qt.lighter(color)
+        Item {
+            implicitWidth: ListView.view.orientation === ListView.Vertical ? ListView.view.width : fieldSize
+            implicitHeight: ListView.view.orientation === ListView.Vertical ? fieldSize : ListView.view.height
             Text {
                 text: label
-                color: config.myPalette.windowText
-                anchors.horizontalCenter: parent.horizontalCenter
-                anchors.verticalCenter: parent.verticalCenter
+                color: "white"
+                font.bold: true
+                font.pixelSize: labelSize * 0.6
+                anchors.centerIn: parent
             }
         }
     }
@@ -79,6 +83,11 @@ Item {
             pieceValue: value
             pieceIsJoker: isJoker
             pieceIsRandom: isRandom
+            bonusCaption: bonusCaptions[fieldtype] ?? ""
+            pieceIsStart: fieldtype === 0
+            // white grid lines between the squares, like a printed board
+            border.color: isEmpty ? "#eef5ee" : Qt.darker(color, 1.15)
+            border.width: Math.max(1, Math.round(fieldSize * 0.035))
             pieceShadow: (isPlaced && config.bColoredPlayers)
                          ? config.playercolors.get(who).itemColor //colored shadow to show who placed a piece
                          : "transparent"
@@ -242,12 +251,34 @@ Item {
         }
     }
 
+    // dark green frame carrying the coordinates on all four sides
+    Rectangle {
+        id: boardFrame
+        x: 0
+        y: 0
+        width: gdBoard.width + 2 * labelSize
+        height: gdBoard.height + 2 * labelSize
+        radius: labelSize / 2
+        color: "#0b5d2a"
+        border.color: Qt.darker(color, 1.3)
+    }
     ListView {
         id: vertLabels
         anchors.top: gdBoard.top
         anchors.left: parent.left
         height: fieldSize * GamePlay.boardSize
-        width: fieldSize
+        width: labelSize
+        model: vertLabelModel
+        delegate: labelDelegate
+        orientation: ListView.Vertical
+        interactive: false
+    }
+    ListView {
+        id: vertLabelsRight
+        anchors.top: gdBoard.top
+        anchors.left: gdBoard.right
+        height: fieldSize * GamePlay.boardSize
+        width: labelSize
         model: vertLabelModel
         delegate: labelDelegate
         orientation: ListView.Vertical
@@ -258,20 +289,31 @@ Item {
         anchors.top: parent.top
         anchors.left: gdBoard.left
         width: fieldSize * GamePlay.boardSize
-        height: fieldSize
+        height: labelSize
         model: horizLabelModel
         delegate: labelDelegate
         orientation: ListView.Horizontal
         interactive: false
         layoutDirection: config.ltr ? Qt.LeftToRight : Qt.RightToLeft
-        onLayoutDirectionChanged: config.ltr ? anchors.left = gdBoard.left : anchors.right = gdBoard.right
+    }
+    ListView {
+        id: horzLabelsBottom
+        anchors.top: gdBoard.bottom
+        anchors.left: gdBoard.left
+        width: fieldSize * GamePlay.boardSize
+        height: labelSize
+        model: horizLabelModel
+        delegate: labelDelegate
+        orientation: ListView.Horizontal
+        interactive: false
+        layoutDirection: config.ltr ? Qt.LeftToRight : Qt.RightToLeft
     }
     GridView {
         id: gdBoard
         anchors.left: parent.left
         anchors.top: parent.top
-        anchors.topMargin: fieldSize
-        anchors.leftMargin: fieldSize
+        anchors.topMargin: labelSize
+        anchors.leftMargin: labelSize
         width: fieldSize*GamePlay.boardSize
         height: fieldSize*GamePlay.boardSize
         cellHeight: fieldSize
@@ -284,8 +326,8 @@ Item {
     ListView {
         id: rackList
         anchors.left: parent.left
-        anchors.leftMargin: fieldSize
-        anchors.top: gdBoard.bottom
+        anchors.leftMargin: labelSize
+        anchors.top: boardFrame.bottom
         anchors.topMargin: fieldSize * 0.25
         width: gdBoard.width
         height: fieldSize //any height works; none makes pieces invisible

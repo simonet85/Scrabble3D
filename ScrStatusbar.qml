@@ -191,8 +191,15 @@ RowLayout {
             shadowColor: config.bColoredPlayers
                          ? Qt.lighter(config.playercolors.get(index).itemColor)
                          : "transparent"
-            shadowText: GamePlay.getPlayerName(index);
+            // name + current score; the winner(s) are marked once the game is over
+            property int score: GamePlay.statTotal[index] ?? 0
+            property bool isWinner: GamePlay.isInitialized && !GamePlay.isRunning &&
+                                    score === Math.max(...GamePlay.statTotal)
+            shadowText: (isWinner ? qsTr("Winner:") + " " : "") + GamePlay.getPlayerName(index) + "  " + score
             active: index === GamePlay.currentPlayer;
+            ToolTip.visible: maPlayerScore.containsMouse
+            ToolTip.text: qsTr("%1: %2 points").arg(GamePlay.getPlayerName(index)).arg(score)
+            MouseArea { id: maPlayerScore; anchors.fill: parent; hoverEnabled: true }
         }
 
     }

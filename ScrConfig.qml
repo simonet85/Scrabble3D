@@ -180,9 +180,7 @@ Window {
         else
             configBoard.sbSize.value = Math.round(Math.cbrt(
                                                       config.board.length))
-        var aColors = getConfigValue("colors", "#c0c0c0,#008000,#00ffff,
-#0000ff,#000060,#ff6060,
-#ff0000,#600000,#ffff00").split(",")
+        var aColors = getConfigValue("colors", "#f4b324,#13843a,#b9dcf5,#2a97d6,#1a5a9a,#f4b324,#d4202c,#8a1018,#ffff00").split(",")
         if (scrColors.count === aColors.length) {
             for (var i = 0; i < scrColors.count; ++i)
                 scrColors.setProperty(i, "itemColor",
