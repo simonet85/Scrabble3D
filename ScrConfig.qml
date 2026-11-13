@@ -441,10 +441,10 @@ Window {
             fill: parent
 
             // Android system bars
-            topMargin: parent.SafeArea.margins.top
-            leftMargin: parent.SafeArea.margins.left
-            rightMargin: parent.SafeArea.margins.right
-            bottomMargin: parent.SafeArea.margins.bottom
+            topMargin: parent.SafeArea ? parent.SafeArea.margins.top : 0
+            leftMargin: parent.SafeArea ? parent.SafeArea.margins.left : 0
+            rightMargin: parent.SafeArea ? parent.SafeArea.margins.right : 0
+            bottomMargin: parent.SafeArea ? parent.SafeArea.margins.bottom : 0
         }
 
         SplitView {

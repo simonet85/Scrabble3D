@@ -243,7 +243,9 @@ ApplicationWindow {
     Loader {
         id: mainLoader
         anchors.fill: parent
-        asynchronous: true
+        // synchronous: with asynchronous loading the initial landscape/portrait state change
+        // restarts the incubation and Qt logs "QQmlComponent: Component is not ready"
+        asynchronous: false
         state: height > width ? "portrait" : "landscape"
         onLoaded: main.board.updateFieldSize() //changing the number of fields should result in resizing
         states:

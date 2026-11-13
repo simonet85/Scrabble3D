@@ -76,6 +76,9 @@ void dictionary::doLoad(QString fileName, QString categories)
         while (!in.atEnd())
         {
             sLine = in.readLine();
+            // files may use CRLF line endings; the trailing \r breaks section detection
+            if (sLine.endsWith('\r'))
+                sLine.chop(1);
             readSize += sLine.length();
             emit onProgress( round( (readSize/totSize)*100) );
 

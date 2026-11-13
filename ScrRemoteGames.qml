@@ -37,22 +37,17 @@ Dialog {
 
     contentItem: ColumnLayout {
 
-        SortFilterProxyModel {
+        QtObject {
             id: sortModel
-            model: GamePlay.remoteGames
-            sorters: [
-                RoleSorter {
-                    roleName: _roleName[_sortIndex]
-                    sortOrder: _sortOrder === 0 ? Qt.DescendingOrder : Qt.AscendingOrder
-                }
-            ]
         }
         HorizontalHeaderView {
             id: tableHeader
             syncView: tableView
             boundsMovement: Flickable.StopAtBounds
             Layout.fillWidth: true
-            delegate: HorizontalHeaderViewDelegate {
+            delegate: ItemDelegate {
+                required property int index
+                text: GamePlay.remoteGames.headerData(index, Qt.Horizontal) ?? ""
                 TapHandler {
                     onTapped: {
                         if (index == _sortIndex)
@@ -73,7 +68,7 @@ Dialog {
             columnSpacing: 1
             rowSpacing: 3
 
-            model: sortModel
+            model: GamePlay.remoteGames
 
             columnWidthProvider: function(column) {
                 if (column < 2)

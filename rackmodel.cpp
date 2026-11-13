@@ -154,8 +154,11 @@ QHash<int, QByteArray> rackmodel::roleNames() const
 
 QVariant rackmodel::data(const QModelIndex &index, int role) const
 {
-    if ( !index.isValid() || (m_nLocalPlayer > m_nPlayerCount) ) {
-        qFatal("Invalid rackmodel request");
+    // a view may query while the model is being reset (e.g. new game with fewer players):
+    // answer with an empty value instead of aborting the application
+    if ( !index.isValid() || (m_nLocalPlayer < 0) || (m_nLocalPlayer >= m_lPieces.count()) ||
+         (index.row() >= m_lPieces[m_nLocalPlayer].count()) ) {
+        qWarning("Invalid rackmodel request");
         return QVariant();
     }
     const Letter aLetter(m_lPieces[m_nLocalPlayer][index.row()]);
