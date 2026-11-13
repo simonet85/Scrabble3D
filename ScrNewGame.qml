@@ -50,7 +50,7 @@ Dialog {
         if (!GamePlay.isConnected) {
             var configData = {}
             configData = GamePlay.loadConfig("")
-            rbIndex = configData["playerCount"] || 1
+            rbIndex = configData["playerCount"] || 2 //default: human vs computer
             playerNames.clear()
             if (GamePlay.isDemo) {
                 playerNames.append({"playerName": qsTr("1st Player"),
@@ -72,7 +72,7 @@ Dialog {
                                        "isComputer": false})
                 playerNames.append({"playerName": configData["player2"] || qsTr("2nd Player"),
                                        "isChecked": rbIndex === 2,
-                                       "isComputer": configData["comp2"] === "true" || false})
+                                       "isComputer": (configData["comp2"] ?? "true") === "true"})
                 playerNames.append({"playerName": configData["player3"] || qsTr("3rd Player"),
                                        "isChecked": rbIndex === 3,
                                        "isComputer": configData["comp3"] === "true" || false})
