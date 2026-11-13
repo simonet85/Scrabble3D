@@ -15,15 +15,8 @@ ColumnLayout {
     // TODO: SortFilterProxyModel needs to be on the Qt side
     // no key up/down when sorted possible, no true selection,
     // adding items when sorted not at the right position
-    SortFilterProxyModel {
+    QtObject {
         id: sortModel
-        model: GamePlay.gamecourseModel
-        sorters: [
-            RoleSorter {
-                roleName: _roleName[_sortIndex]
-                sortOrder: _sortOrder === 0 ? Qt.DescendingOrder : Qt.AscendingOrder
-            }
-        ]
     }
 
     HorizontalHeaderView {
@@ -31,7 +24,19 @@ ColumnLayout {
         Layout.fillWidth: true
         syncView: statTable
         boundsMovement: Flickable.StopAtBounds
-        delegate: HorizontalHeaderViewDelegate {
+        delegate: ItemDelegate {
+            required property int index
+            text: GamePlay.gamecourseModel.headerData(index, Qt.Horizontal) ?? ""
+            font: tm.font
+            leftPadding: 4
+            rightPadding: 4
+            //right-align numeric headers like their columns
+            contentItem: Label {
+                text: parent.text
+                font: parent.font
+                horizontalAlignment: index === 1 ? Text.AlignLeft : Text.AlignRight
+                elide: Text.ElideRight
+            }
             TapHandler {
                 onTapped: {
                     if (index == _sortIndex)
@@ -62,7 +67,7 @@ ColumnLayout {
             return col[column]
         }
         ScrollBar.vertical: ScrollBar { }
-        model: sortModel
+        model: GamePlay.gamecourseModel
         columnSpacing: 1
         rowSpacing: 1
 /*

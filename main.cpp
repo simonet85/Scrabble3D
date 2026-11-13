@@ -10,6 +10,7 @@
 // use "set QT_D3D_ADAPTER_INDEX=1" on Windows
 int main(int argc, char *argv[])
 {
+    qputenv("QT_QUICK_CONTROLS_STYLE", "Basic");
     QApplication scrabble3D(argc, argv);
     scrabble3D.setApplicationName("Scrabble3D");
     // this changes the path for the settings
