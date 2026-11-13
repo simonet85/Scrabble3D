@@ -13,12 +13,26 @@ Rectangle {
     property color bonusRight: "transparent"
     property color bonusBottom: "transparent"
 
+    property string bonusCaption: "" //e.g. "TRIPLE\nWORD", shown on empty premium squares
+    property bool isEmpty: pieceLabel === String.fromCharCode(0)
+
     property int cMarkerSize: width/5
 
     color: pieceColor
 
     border.color: Qt.lighter(color)
 //    border.color: (pieceLabel === "") ? Qt.lighter(color) : "transparent"
+
+    Text {
+        visible: isEmpty && bonusCaption !== ""
+        text: bonusCaption
+        anchors.centerIn: parent
+        horizontalAlignment: Text.AlignHCenter
+        // fixed size: Text.Fit with a reduced lineHeight loops forever in Qt 6.8
+        font.pixelSize: bonusCaption.length === 1 ? parent.height * 0.6 : parent.width * 0.17
+        font.bold: true
+        color: isDark(parent.color) ? "white" : "#1a1a1a"
+    }
 
     Text {
         text: (pieceLabel === String.fromCharCode(0) || pieceLabel === "?") ? "" : pieceLabel
