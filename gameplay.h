@@ -149,6 +149,8 @@ public:
         emit onSend(network::nwLoadGame, m_pNetwork->localPlayerName(), "Name="+fileName);
     }
     Q_INVOKABLE void loadDictionary(const QString fileName, const QString categories) { m_pDictionary->loadDictionary(fileName, categories); }
+    Q_INVOKABLE bool canResign() const { return m_bIsRunning && !m_bIsConnected && !m_bIsHistory && m_nPlayerCount == 2; }
+    Q_INVOKABLE void resign(); // FISF 4.11: "J'abandonne", opponent has to agree
     Q_INVOKABLE void deleteDictionary(const QString fileName) { m_pDicListModel->deleteDic(fileName); }
     Q_INVOKABLE void setCategoryChecked(const QString catName, const bool isChecked, const bool doReset = false)
         { m_pDictionary->setCategoryChecked(catName,isChecked);
@@ -314,6 +316,14 @@ private:
     uint m_nWordCheckPenalty;                 // penalty when challenge was wrong
     int m_nWordCheckBonus;                    // bonus for correct objection
     int m_nScrabbleBonus;                     // bonus when all pieces are placed, usually 50
+    int m_nScrabbleExtraBonus = 0;            // extra bonus per piece placed beyond 7 when all are placed (FISF 3.1.2c, original formulas)
+    bool m_bWordCheckPerWord = false;         // challenge penalty is given per challenged word instead of per move (FISF 3.5.3)
+    int m_nCheckedWords = 0;                  // number of words of the last doCheckWords()
+    int m_nUnknownWords = 0;                  // number of those words not accepted
+    int scrabbleBonusFor(const int nPlaced) const;
+    int wordCount(const sharedMove &aMove) const;
+    QString matchSheet() const;               // two player result with the difference limited to 100 points (FISF 5.3)
+    QString drawFirstPlayer(const QVariantList &aLetterList, long nSeed); // FISF 2.1; reorders m_lPlayerNames
     bool m_bIsCLABBERS;                       // FEATURE: gameplay: whether CLABBER variant is allowed
     uint m_nPerformance;                      // absolute value: 0 = always the best word; >0 = randomly picked => doComputeMove()
     QList<sharedMove> m_pMoves;

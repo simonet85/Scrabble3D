@@ -27,6 +27,7 @@ Window {
     property int timeControlValue: 10 // ConfigTime::rbNoLimit/rbPerMove/rbPerGame
 
     property int bingoBonus: 50 // ConfigRules::sbBingo
+    property int bingoExtraBonus: 0 // ConfigRules::sbBingoExtra
     property int gameEndBonus: 0 // ConfigRules::sbGameEnd
     property bool addLetters: true // ConfigRules::sbGameEnd
     property bool subtractLetters: true // ConfigRules::sbGameEnd
@@ -40,6 +41,7 @@ Window {
     property int wordCheckPenalty: 10 // ConfigWordCheck::sbPenalty.value
     property int wordCheckBonus: 0 // ConfigWordCheck::sbBonus.value
     property bool clabbers: false // ConfigWordCheck::cbClabbers
+    property bool wordCheckPerWord: false // ConfigWordCheck::cbPerWord
 
     property bool canbuytime: false // ConfigTimeControl::rbGameEnd/rbPenalty
     property int buytimecount: 0 // ConfigTimeControl::sbPenaltyCount
@@ -116,6 +118,7 @@ Window {
         configData["sbPenalty"] = configWordCheck.sbPenalty.value
         configData["sbBonus"] = configWordCheck.sbBonus.value
         configData["cbClabbers"] = configWordCheck.cbClabbers.checked
+        configData["cbPerWord"] = configWordCheck.cbPerWord.checked
         //configTime
         configData["rbNoLimit"] = configTime.rbNoLimit.checked
         configData["rbPerMove"] = configTime.rbPerMove.checked
@@ -130,6 +133,7 @@ Window {
         //configRules
         configData["sbPasses"] = configRules.sbPasses.value
         configData["sbBingo"] = configRules.sbBingo.value
+        configData["sbBingoExtra"] = configRules.sbBingoExtra.value
         configData["sbGameEnd"] = configRules.sbGameEnd.value
         configData["sbJokerPenalty"] = configRules.sbJokerPenalty.value
         configData["cbAddLetters"] = configRules.cbAddLetters.checked
@@ -231,6 +235,8 @@ Window {
         configWordCheck.sbBonus.value = getConfigValue("sbBonus", 0)
         configWordCheck.cbClabbers.checked = getConfigValue("cbClabbers",
                                                             "false") === "true"
+        configWordCheck.cbPerWord.checked = getConfigValue("cbPerWord",
+                                                           "true") === "true" //French default (FISF 3.5.3)
 
         //time
         configTime.rbNoLimit.checked = getConfigValue("rbNoLimit",
@@ -253,6 +259,7 @@ Window {
         //rules
         configRules.sbPasses.value = getConfigValue("sbPasses", 3)
         configRules.sbBingo.value = getConfigValue("sbBingo", 50)
+        configRules.sbBingoExtra.value = getConfigValue("sbBingoExtra", 25) //French default (FISF 3.1.2c)
         configRules.sbGameEnd.value = getConfigValue("sbGameEnd", 0)
         configRules.sbJokerPenalty.value = getConfigValue("sbJokerPenalty", 0)
         configRules.cbAddLetters.checked = getConfigValue("cbAddLetters",

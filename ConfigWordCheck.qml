@@ -15,6 +15,7 @@ GridLayout {
         rbChallenge.checked = defaults.languages[defaultLetterSet].wordCheckMode === 2
         sbPeriod.value = defaults.languages[defaultLetterSet].challengeTime
         sbPenalty.value = defaults.languages[defaultLetterSet].challengePenalty
+        cbPerWord.checked = defaults.languages[defaultLetterSet].challengePerWord ?? false
     }
 
     property alias rbTakeback: rbTakeback
@@ -24,6 +25,7 @@ GridLayout {
     property alias sbPenalty: sbPenalty
     property alias sbBonus: sbBonus
     property alias cbClabbers: cbClabbers
+    property alias cbPerWord: cbPerWord
 
     ButtonGroup {
         id: radioGroup
@@ -178,6 +180,18 @@ GridLayout {
         }
         InfoTip {
             tiptext: qsTr("Enable this option to allow scrambled letters like SCRABBLE -> CLABBERS\nThis option is not yet implemented")
+        }
+    }
+    RowLayout {
+        Layout.column: 1; Layout.row: 5;
+        ColorCheckBox {
+            id: cbPerWord
+            text: qsTr("Penalty per challenged word")
+            enabled: rbChallenge.checked
+            onCheckStateChanged: config.wordCheckPerWord = checked
+        }
+        InfoTip {
+            tiptext: qsTr("The penalty is multiplied by the number of words wrongly challenged (all words of the move)")
         }
     }
 

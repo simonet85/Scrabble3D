@@ -177,6 +177,7 @@ void GamePlay::syncChallengeWord()
     if (!m_bIsConnected)
     {
         endChallenge();
+        const int nWords = m_pMoves.count() > 1 ? wordCount(m_pMoves[m_pMoves.count()-2]) : 1;
         if (!doCheckWords(true))
         {
             rollbackLastMove();
@@ -184,15 +185,146 @@ void GamePlay::syncChallengeWord()
             m_pMsgModel->addMessage(tr("%1 legitimately challenged the last move and receives a bonus of %2 points.")
                                         .arg(m_lPlayerNames[m_nCurrentPlayer])
                                         .arg(m_nWordCheckBonus));
+            // FISF 3.5.3: words challenged wrongly are penalized even if other words were refused
+            const int nWrong = m_nCheckedWords - m_nUnknownWords;
+            if (m_bWordCheckPerWord && (m_nWordCheckPenalty > 0) && (nWrong > 0)) {
+                const int nPenalty = m_nWordCheckPenalty * nWrong;
+                m_pGameCourseModel->addBonus(m_nCurrentPlayer, -nPenalty);
+                m_pMsgModel->addMessage(tr("%1 illegitimately challenged the last move and receives a penalty of %2 points.")
+                                            .arg(m_lPlayerNames[m_nCurrentPlayer])
+                                            .arg(nPenalty));
+            }
         } else
         {
-            m_pGameCourseModel->addBonus(m_nCurrentPlayer, -m_nWordCheckPenalty);
+            const int nPenalty = m_bWordCheckPerWord ? m_nWordCheckPenalty * nWords : m_nWordCheckPenalty;
+            m_pGameCourseModel->addBonus(m_nCurrentPlayer, -nPenalty);
             m_pMsgModel->addMessage(tr("%1 illegitimately challenged the last move and receives a penalty of %2 points.")
                                         .arg(m_lPlayerNames[m_nCurrentPlayer])
-                                        .arg(m_nWordCheckPenalty));
+                                        .arg(nPenalty));
         }
     } else
         doNetworkSyncChallengeWord();
+}
+
+int GamePlay::scrabbleBonusFor(const int nPlaced) const
+{
+    // bonus when all pieces of the rack are placed; in original formulas with more than 7 pieces
+    // each additional piece gives an extra bonus (FISF 3.1.2c)
+    return m_nScrabbleBonus + m_nScrabbleExtraBonus * qMax(0, nPlaced - 7);
+}
+
+int GamePlay::wordCount(const sharedMove &aMove) const
+{
+    int n = aMove->PlacedWord.isEmpty() ? 0 : 1;
+    if (!aMove->ConnectedWords.isEmpty())
+        for (const QString &s : aMove->ConnectedWords.split(","))
+            if (!s.trimmed().isEmpty())
+                n++;
+    return qMax(1, n);
+}
+
+QString GamePlay::matchSheet() const
+{
+    if (m_nPlayerCount != 2)
+        return QString();
+    const int a = m_pGameCourseModel->getScore(0);
+    const int b = m_pGameCourseModel->getScore(1);
+    return tr("Match sheet: %1 %2 - %3 %4, difference %5 (limited to 100 points).")
+            .arg(m_lPlayerNames[0]).arg(a).arg(m_lPlayerNames[1]).arg(b)
+            .arg(qMin(qAbs(a - b), 100));
+}
+
+QString GamePlay::drawFirstPlayer(const QVariantList &aLetterList, long nSeed)
+{
+    // FISF 2.1: each player draws a letter, the one closest to A starts; jokers don't count and
+    // equal letters are drawn again
+    QStringList lDraw;
+    for (int i = 0; i + 2 < aLetterList.count(); i += 3)
+        for (int j = 0; j < aLetterList[i+2].toInt(); j++)
+            lDraw.append(aLetterList[i].toString());
+    if (lDraw.isEmpty() || m_lPlayerNames.count() < 2)
+        return QString();
+
+    QRandomGenerator rand(static_cast<quint32>(nSeed == -1 ? time(0) : nSeed));
+    QList<int> candidates;
+    for (int i = 0; i < m_lPlayerNames.count(); i++)
+        candidates.append(i);
+    QStringList lLog;
+    for (int nRound = 0; nRound < 100; nRound++) {
+        QStringList drawn;
+        for (int k = 0; k < candidates.count(); k++)
+            drawn.append(lDraw[rand.bounded(int(lDraw.count()))]);
+        QString best = drawn[0];
+        for (const QString &s : std::as_const(drawn))
+            if (QString::compare(s, best) < 0)
+                best = s;
+        QList<int> next;
+        QStringList part;
+        for (int k = 0; k < candidates.count(); k++) {
+            part.append(m_lPlayerNames[candidates[k]] + " " + drawn[k]);
+            if (drawn[k] == best)
+                next.append(candidates[k]);
+        }
+        lLog.append(part.join(", "));
+        candidates = next;
+        if (candidates.count() == 1)
+            break;
+    }
+    const int nWinner = candidates[0];
+
+    QStringList lNames = m_lPlayerNames;
+    const QString sWinner = lNames.takeAt(nWinner);
+    lNames.prepend(sWinner);
+    m_lPlayerNames = lNames;
+    return tr("Draw for the first move: %1 - %2 starts.").arg(lLog.join(" / "), sWinner);
+}
+
+void GamePlay::resign()
+{
+    // FISF 4.11: the abandonment needs the agreement of the opponent. Final scores:
+    // gap <= 100 and winner > 450: winner keeps score, loser 350; gap <= 100 and winner <= 450: 450 / 350
+    // gap > 100 and winner > 450: both keep score; gap > 100 and winner <= 450: 450 / loser keeps score
+    if (!canResign())
+        return;
+    const uint nLoser = m_nCurrentPlayer;
+    const uint nWinner = 1 - nLoser;
+
+    QMessageBox msgBox;
+    msgBox.setWindowTitle("Scrabble3D");
+    msgBox.setText(tr("%1 resigns.").arg(m_lPlayerNames[nLoser]));
+    msgBox.setInformativeText(tr("%1, do you agree?").arg(m_lPlayerNames[nWinner]));
+    msgBox.setIcon(QMessageBox::Question);
+    msgBox.setStandardButtons(QMessageBox::Yes | QMessageBox::No);
+    if (msgBox.exec() != QMessageBox::Yes)
+        return; //the game continues
+
+    if (m_nTimerID != -1) {
+        killTimer(m_nTimerID);
+        m_nTimerID = -1;
+    }
+
+    const int nScoreWinner = m_pGameCourseModel->getScore(nWinner);
+    const int nScoreLoser = m_pGameCourseModel->getScore(nLoser);
+    const bool bSmallGap = qAbs(nScoreWinner - nScoreLoser) <= 100;
+    const bool bWinnerAbove450 = nScoreWinner > 450;
+    int nFinalWinner = nScoreWinner;
+    int nFinalLoser = nScoreLoser;
+    if (bSmallGap) {
+        nFinalWinner = bWinnerAbove450 ? nScoreWinner : 450;
+        nFinalLoser = 350;
+    } else if (!bWinnerAbove450)
+        nFinalWinner = 450;
+    m_pGameCourseModel->addBonus(nWinner, nFinalWinner - nScoreWinner);
+    m_pGameCourseModel->addBonus(nLoser, nFinalLoser - nScoreLoser);
+
+    m_pMsgModel->addMessage(tr("%1 resigns, %2 wins the game.")
+                                .arg(m_lPlayerNames[nLoser], m_lPlayerNames[nWinner]));
+    m_pMsgModel->addMessage(matchSheet());
+
+    m_bIsRunning = false;
+    emit isRunningChanged();
+    emit statInfoChanged();
+    emit statTotalChanged();
 }
 
 void GamePlay::startNewGame(QVariantMap gameConfig)
@@ -208,6 +340,9 @@ void GamePlay::startNewGame(QVariantMap gameConfig)
         std::mt19937 rng(nSeed);
         std::shuffle(m_lPlayerNames.begin(), m_lPlayerNames.end(), rng);
     }
+    QString sDrawMessage;
+    if (gameConfig["DrawFirst"].toBool() && !m_bIsConnected)
+        sDrawMessage = drawFirstPlayer(gameConfig["LetterList"].toList(), nSeed);
     m_pMsgModel->playerNames(m_lPlayerNames); //to highlight player messages
     emit numberOfPlayersChanged();
 
@@ -294,6 +429,8 @@ void GamePlay::startNewGame(QVariantMap gameConfig)
     for (uint i = 0; i < m_nPlayerCount; i++)
         m_nTimePenaltyCount.append(!m_bTimeGameLost ? gameConfig["TimePenaltyCount"].toInt() : 0);
     m_nScrabbleBonus = gameConfig["ScrabbleBonus"].toInt();
+    m_nScrabbleExtraBonus = gameConfig["ScrabbleExtraBonus"].toInt();
+    m_bWordCheckPerWord = gameConfig["WordCheckPerWord"].toBool();
     m_eWordCheckMode = static_cast<WordCheckMode>(gameConfig["WordCheckType"].toInt());
     m_nWordCheckPeriod = gameConfig["WordCheckPeriod"].toInt();
     m_nWordCheckPenalty = gameConfig["WordCheckPenalty"].toInt();
@@ -324,6 +461,8 @@ void GamePlay::startNewGame(QVariantMap gameConfig)
     }
 
     m_pGameCourseModel->clear();
+    if (!sDrawMessage.isEmpty())
+        m_pMsgModel->addMessage(sDrawMessage);
     doStartTimer();
     emit currentMoveChanged();
     emit currentPlayerChanged();
@@ -587,6 +726,8 @@ void GamePlay::doGameEnd()
 
     if (!sWinner.isEmpty())
         m_pMsgModel->addMessage(sWinner);
+    if (m_nPlayerCount == 2)
+        m_pMsgModel->addMessage(matchSheet());
 
     //network
     if (m_bIsConnected) {
@@ -645,6 +786,11 @@ bool GamePlay::doCheckWords(const bool bPrevious)
                                         : m_pMoves.last()->ConnectedWords;
 
     QStringList unknownWords = m_pDictionary->checkWords(placed,connected);
+    m_nCheckedWords = (placed.isEmpty() ? 0 : 1);
+    for (const QString &s : connected.split(","))
+        if (!s.trimmed().isEmpty())
+            m_nCheckedWords++;
+    m_nUnknownWords = unknownWords.count();
     if (!unknownWords.isEmpty())
     {
         QMessageBox msgBox;
@@ -656,6 +802,7 @@ bool GamePlay::doCheckWords(const bool bPrevious)
         msgBox.setStandardButtons(QMessageBox::Yes | QMessageBox::No);
         if (msgBox.exec() == QMessageBox::No)
             return false;
+        m_nUnknownWords = 0; //accepted anyway
     }
     return true;
 }
@@ -890,7 +1037,7 @@ void GamePlay::dropLetter(const uint rackIndex, const uint boardIndex)
         if (m_bIsAccepted) //TODO: gameplay: history bonus not done correctly due to last()
         {
             if (m_pRackModel->rackSize() == m_pMoves.last()->letterCount())
-                m_pMoves.last()->setBonus( m_nScrabbleBonus, true );
+                m_pMoves.last()->setBonus( scrabbleBonusFor(m_pMoves.last()->letterCount()), true );
         }
     }
 
@@ -1299,6 +1446,8 @@ void GamePlay::saveGame(QString fileName, const bool bSilent)
         settings.setValue("WordCheckPenalty", m_nWordCheckPenalty);
         settings.setValue("WordCheckBonus", m_nWordCheckBonus);
         settings.setValue("ScrabbleBonus", m_nScrabbleBonus);
+        settings.setValue("ScrabbleExtraBonus", m_nScrabbleExtraBonus);
+        settings.setValue("WordCheckPerWord", m_bWordCheckPerWord);
         settings.setValue("CLABBERS", m_bIsCLABBERS);
         settings.setValue("IsRunning", m_bIsRunning);
     }
@@ -1438,6 +1587,8 @@ void GamePlay::loadGame(QString fileName, const bool bSilent)
         m_nWordCheckPenalty = settings.value("WordCheckPenalty").toUInt();
         m_nWordCheckBonus = settings.value("WordCheckBonus").toUInt();
         m_nScrabbleBonus = settings.value("ScrabbleBonus").toUInt();
+        m_nScrabbleExtraBonus = settings.value("ScrabbleExtraBonus", 0).toInt();
+        m_bWordCheckPerWord = settings.value("WordCheckPerWord", false).toBool();
         m_bIsCLABBERS = settings.value("CLABBERS").toBool();
     }
     settings.endGroup();
@@ -1510,7 +1661,7 @@ void GamePlay::loadGame(QString fileName, const bool bSilent)
                 m_bIsAccepted = m_pMoves.last()->addLetter(aLetter);
             }
             if (nLetters == m_pRackModel->rackSize())
-                m_pMoves.last()->setBonus( m_nScrabbleBonus, true ); //while playing done in dropLetter()
+                m_pMoves.last()->setBonus( scrabbleBonusFor(nLetters), true ); //while playing done in dropLetter()
             settings.endArray();
             //update rack for gamecourse browsing
             QList<Letter> aLetters;

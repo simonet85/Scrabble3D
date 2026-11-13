@@ -228,6 +228,12 @@ ApplicationWindow {
         }
     }
     Action {
+        id: acResign
+        text: qsTr("Resign")
+        enabled: GamePlay.canResign()
+        onTriggered: GamePlay.resign()
+    }
+    Action {
         id: acDictionary
         text: qsTr("Word Search")
         enabled: !GamePlay.isConnected || !GamePlay.isRunning
