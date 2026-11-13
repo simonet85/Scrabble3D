@@ -307,6 +307,8 @@ void GamePlay::startNewGame(QVariantMap gameConfig)
     m_nPerformance = gameConfig["Performance"].isNull() ? 0 : gameConfig["Performance"].toUInt() + 1;
     m_pMoves.clear();
     m_pMoves.append(sharedMove(new move(m_bIsFirstMove, m_pBoard)));
+    emit placedValueChanged(0);
+    emit exchangeCountChanged();
     m_nCurrentMove = 0;
     m_nCurrentPlayer = 0;
 
@@ -449,6 +451,8 @@ void GamePlay::nextPlayer(const bool bIsLoading)
 
     //new empty move
     m_pMoves.append( sharedMove(new move(m_bIsFirstMove, m_pBoard)) );
+    emit placedValueChanged(0);
+    emit exchangeCountChanged();
 
     //increase currentmove and currentplayer
     m_nCurrentMove++;
@@ -710,6 +714,7 @@ void GamePlay::exchangeLetter(const unsigned int rackIndex)
     }
     //do toggle
     m_pRackModel->toggleExchangeFlag(rackIndex);
+    emit exchangeCountChanged();
 }
 
 void GamePlay::resetPieces()
@@ -895,6 +900,61 @@ void GamePlay::dropLetterRack(const uint fromIndex, const uint toIndex)
     m_pRackModel->move(fromIndex, toIndex);
 }
 
+void GamePlay::recallLetters()
+{
+    if (!canEditRack())
+        return;
+    Letter aLetter;
+    for (int i = 0; i < m_pBoard->getFieldSize(); i++) {
+        aLetter = m_pBoard->getLetter(i);
+        if (aLetter.State == LetterState::lsBoard)
+            removeLetter(aLetter);
+    }
+    // an empty move is always acceptable (pass)
+    if (m_pMoves.last()->letterCount() == 0) {
+        m_bIsAccepted = true;
+        m_pMoves.last()->setLastError("");
+        emit isAcceptedChanged();
+        emit lastErrorChanged();
+        emit placedValueChanged(0);
+    }
+}
+
+void GamePlay::shuffleRack()
+{
+    if (!canEditRack())
+        return;
+    recallLetters();
+    m_pRackModel->shuffle();
+}
+
+void GamePlay::clearMove()
+{
+    if (!canEditRack())
+        return;
+    recallLetters();
+    m_pRackModel->clearExchangeFlags();
+    emit exchangeCountChanged();
+}
+
+QString GamePlay::getPlacedWords()
+{
+    if (m_pMoves.isEmpty() || m_pMoves.last()->PlacedWord.isEmpty())
+        return "";
+    QString sWords = m_pMoves.last()->PlacedWord;
+    if (!m_pMoves.last()->ConnectedWords.isEmpty())
+        sWords += ", " + m_pMoves.last()->ConnectedWords;
+    return replaceAllLetters(sWords);
+}
+
+bool GamePlay::getPlacedValid()
+{
+    if (m_pMoves.isEmpty() || m_pMoves.last()->PlacedWord.isEmpty() || !m_bIsAccepted)
+        return false;
+    return m_pDictionary->checkWords(m_pMoves.last()->PlacedWord,
+                                     m_pMoves.last()->ConnectedWords).isEmpty();
+}
+
 void GamePlay::jokerLetter(const uint boardIndex, const QString aWhat)
 {
     int z = m_pBoard->pointToWhere( m_pBoard->pos3D(boardIndex) );
@@ -904,6 +964,7 @@ void GamePlay::jokerLetter(const uint boardIndex, const QString aWhat)
     m_pMoves.last()->checkMove(); //re-check to update placeword
     Letter aLetter = m_pBoard->getLetter(z);
     m_pBoardModel->updateSquare(aLetter.Point);
+    emit placedValueChanged(m_pMoves.last()->Value());
 }
 
 int GamePlay::removeLetter(const uint boardIndex)

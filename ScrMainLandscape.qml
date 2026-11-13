@@ -33,6 +33,9 @@ ColumnLayout {
             title: qsTr("&Game")
             LongMenuItem { action: acNewGame }
             LongMenuItem { action: acNextPlayer }
+            LongMenuItem { action: acPassMove }
+            LongMenuItem { action: acShuffleRack }
+            LongMenuItem { action: acRecallPieces }
             LongMenuItem { action: acCambioSecco }
             LongMenuItem { action: acChallenge }
             LongMenuItem { action: acComputeMove }

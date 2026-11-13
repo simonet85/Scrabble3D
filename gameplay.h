@@ -62,6 +62,12 @@ class GamePlay : public QObject
     Q_PROPERTY(int activePosition READ getActivePosition WRITE setActivePosition NOTIFY activePositionChanged)
     Q_PROPERTY(QString lastError READ getLastError NOTIFY lastErrorChanged)
     Q_PROPERTY(QString statInfo READ getStatInfo NOTIFY statInfoChanged)
+    //live preview of the move being placed
+    Q_PROPERTY(uint placedValue READ getPlacedValue NOTIFY placedValueChanged)
+    Q_PROPERTY(QString placedWords READ getPlacedWords NOTIFY placedValueChanged)
+    Q_PROPERTY(bool placedValid READ getPlacedValid NOTIFY placedValueChanged)
+    Q_PROPERTY(int exchangeCount READ getExchangeCount NOTIFY exchangeCountChanged)
+    Q_PROPERTY(bool canExchange READ getCanExchange NOTIFY exchangeCountChanged)
     Q_PROPERTY(QVariantList statTotal READ getStatTotal NOTIFY statTotalChanged)
     //compute move
     Q_PROPERTY(int computeProgress READ getComputeProgress WRITE setComputeProgress NOTIFY computeProgressChanged)
@@ -92,6 +98,7 @@ signals:
     void computeResultsChanged();
     void computeProgressChanged();
     void placedValueChanged(uint);
+    void exchangeCountChanged();
     void wordCountChanged();
     void statInfoChanged();
     void statTotalChanged();
@@ -121,6 +128,9 @@ public:
     Q_INVOKABLE bool canDrop(const unsigned int boardIndex); // check if field is empty
     Q_INVOKABLE bool canDrag(); // block dragging if letters have been marked to exchange
     Q_INVOKABLE void exchangeLetter(const unsigned int rackIndex); // check whether letters have been placed and mark for exchange otherwise
+    Q_INVOKABLE void recallLetters(); // bring all pieces placed in this move back to the rack
+    Q_INVOKABLE void shuffleRack(); // recall placed pieces and shuffle the rack
+    Q_INVOKABLE void clearMove(); // recall placed pieces and unmark exchanges, e.g. before passing
     Q_INVOKABLE QString getLastError() { if (m_pMoves.count()>0) return m_pMoves.last()->LastError(); else return ""; }
     Q_INVOKABLE QString getPlayerName(const int index) { if (index<m_lPlayerNames.count()) return m_lPlayerNames[index]; else return ""; }
     Q_INVOKABLE void addMessage(QString aWhat, QString aWho = "") { m_pMsgModel->addMessage(aWhat, aWho); }
@@ -251,6 +261,12 @@ private:
     void setActivePosition(const int aPosition, const bool bSilent=false);
     int getActivePosition();
     int getComputeProgress() { return m_nProgress; }
+    uint getPlacedValue() { return m_pMoves.isEmpty() ? 0 : m_pMoves.last()->Value(); }
+    QString getPlacedWords();
+    bool getPlacedValid();
+    int getExchangeCount() { return m_pRackModel->exchangeNumber(); }
+    bool getCanExchange() { return m_lBag.count() >= m_pRackModel->rackSize(); } // rule 3.3: at least 7 tiles in the bag
+    bool canEditRack() { return m_bIsRunning && !m_bIsHistory && !m_bIsComputing && getIsLocalPlayer(); }
     void doComputeMove();
     void resetPieces(); //removeLetter(*)
     void rollbackLastMove();

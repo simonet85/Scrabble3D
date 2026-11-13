@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Controls
+import QtQuick.Layouts
 
 Item {
     anchors.fill: parent
@@ -292,5 +293,65 @@ Item {
         spacing: 1
         model: GamePlay.rackModel
         delegate: rackDelegate
+    }
+
+    // player actions next to the rack: shuffle, recall, pass + live score of the move
+    RowLayout {
+        id: rackActions
+        anchors.left: rackList.left
+        anchors.leftMargin: rackList.contentWidth + fieldSize * 0.5
+        anchors.right: gdBoard.right
+        anchors.verticalCenter: rackList.verticalCenter
+        spacing: 4
+        visible: GamePlay.isRunning
+
+        component RackButton: ToolButton {
+            id: rackButton
+            required property Action act
+            action: act
+            display: AbstractButton.IconOnly
+            icon.width: fieldSize * 0.6
+            icon.height: fieldSize * 0.6
+            implicitWidth: fieldSize
+            implicitHeight: fieldSize
+            ToolTip.visible: hovered
+            ToolTip.delay: 500
+            ToolTip.text: act.text + (act.shortcut ? "  (" + act.shortcut + ")" : "")
+        }
+        RackButton { act: acShuffleRack }
+        RackButton { act: acRecallPieces }
+        Button {
+            action: acPassMove
+            Layout.preferredHeight: fieldSize
+            highlighted: GamePlay.exchangeCount > 0
+            ToolTip.visible: hovered
+            ToolTip.delay: 500
+            ToolTip.text: GamePlay.exchangeCount > 0
+                          ? qsTr("End the turn by exchanging the marked tiles")
+                          : GamePlay.canExchange
+                            ? qsTr("Pass the move. To exchange tiles instead, right-click them on the rack.")
+                            : qsTr("Pass the move. Exchanging needs at least 7 tiles in the bag.")
+        }
+        Label {
+            id: lbPlacedScore
+            Layout.fillWidth: true
+            elide: Text.ElideRight
+            leftPadding: 8
+            visible: GamePlay.isLocalPlayer && (GamePlay.placedWords !== "" || !GamePlay.isAccepted)
+            font.pixelSize: fieldSize * 0.4
+            font.bold: true
+            color: !GamePlay.isAccepted ? "#c00000"
+                                        : GamePlay.placedValid ? "#007000" : "#c06000"
+            text: !GamePlay.isAccepted
+                  ? "✗"
+                  : (GamePlay.placedValid ? "✓ " : "? ") + GamePlay.placedWords
+                    + "  " + qsTr("%1 pts").arg(GamePlay.placedValue)
+            ToolTip.visible: maPlacedScore.containsMouse
+            ToolTip.text: !GamePlay.isAccepted
+                          ? GamePlay.lastError
+                          : GamePlay.placedValid ? qsTr("All words found in the dictionary")
+                                                 : qsTr("Word(s) not found in the dictionary")
+            MouseArea { id: maPlacedScore; anchors.fill: parent; hoverEnabled: true }
+        }
     }
 }

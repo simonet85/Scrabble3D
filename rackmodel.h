@@ -33,6 +33,8 @@ public:
     void placeLetter(const int index, const bool bVisible = true); //make rack item an EmptyLetter; visible to show in UI
     void toggleExchangeFlag(const int index);
     void move(const uint fromIndex, const uint toIndex);
+    void shuffle(); //random order of the active player's rack; call only when no piece is on the board
+    void clearExchangeFlags();
     Letter getLetter(const int nRackIndex, int nPlayer = -1) const;
     int rackSize() { return m_nRackSize; }
     void setActivePlayer(const int nPlayer); // set via gameplay.nextPlayer()
