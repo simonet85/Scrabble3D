@@ -1,4 +1,5 @@
 #include "rackmodel.h"
+#include <QRandomGenerator>
 
 rackmodel::rackmodel(QObject *parent)
     : QAbstractListModel(parent),
@@ -72,6 +73,28 @@ void rackmodel::move(const uint fromIndex, const uint toIndex)
     m_lPieces[m_nActivePlayer][toIndex].RackPos = fromIndex;
     m_lPieces[m_nActivePlayer].swapItemsAt(fromIndex, toIndex);
     endResetModel();
+}
+
+void rackmodel::shuffle()
+{
+    if ((m_nActivePlayer < 0) || (m_nActivePlayer >= m_lPieces.count()))
+        return;
+    beginResetModel();
+    QVector<Letter> &rack = m_lPieces[m_nActivePlayer];
+    for (int i = rack.count() - 1; i > 0; i--)
+        rack.swapItemsAt(i, QRandomGenerator::global()->bounded(i + 1));
+    for (int i = 0; i < rack.count(); i++)
+        rack[i].RackPos = i;
+    endResetModel();
+}
+
+void rackmodel::clearExchangeFlags()
+{
+    if ((m_nActivePlayer < 0) || (m_nActivePlayer >= m_lPieces.count()))
+        return;
+    for (int i = 0; i < m_lPieces[m_nActivePlayer].count(); i++)
+        if (m_lPieces[m_nActivePlayer][i].IsExchange)
+            toggleExchangeFlag(i);
 }
 
 Letter rackmodel::getLetter(const int nRackIndex, int nPlayer) const

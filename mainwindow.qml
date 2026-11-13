@@ -82,6 +82,55 @@ ApplicationWindow {
                      ? GamePlay.syncNextPlayer()
                      : GamePlay.nextPlayer()
     }
+    // rack actions, shown next to the rack (ScrBoard.qml)
+    property bool canEditRack: GamePlay.isRunning && !GamePlay.isHistory &&
+                               !GamePlay.isComputing && GamePlay.isLocalPlayer
+    Action {
+        id: acShuffleRack
+        text: qsTr("Shuffle rack")
+        shortcut: "Ctrl+M"
+        icon.source: "qrc:///resources/dice.png"
+        icon.color: iconColor
+        enabled: canEditRack
+        onTriggered: GamePlay.shuffleRack()
+    }
+    Action {
+        id: acRecallPieces
+        text: qsTr("Recall placed pieces")
+        shortcut: "Esc"
+        icon.source: "qrc:///resources/reset.png"
+        icon.color: iconColor
+        enabled: canEditRack
+        onTriggered: GamePlay.recallLetters()
+    }
+    Action {
+        id: acPassMove
+        // rule 3.2 "JE PASSE" / rule 3.3 "JE CHANGE n LETTRES": the same button ends the turn
+        text: GamePlay.exchangeCount > 0
+              ? qsTr("Exchange %n tile(s)", "", GamePlay.exchangeCount)
+              : qsTr("Pass")
+        enabled: canEditRack
+        onTriggered: {
+            if (GamePlay.exchangeCount === 0)
+                GamePlay.clearMove()
+            GamePlay.isConnected ? GamePlay.syncNextPlayer() : GamePlay.nextPlayer()
+        }
+    }
+    // keyboard: only when the game itself has the focus (no dialog, no text field)
+    function isGameFocus() {
+        var item = scrabble3D.activeFocusItem
+        while (item) {
+            if (item === scrabble3D.Overlay.overlay) return false //inside a popup/dialog
+            if (item.hasOwnProperty("cursorPosition")) return false //text input
+            item = item.parent
+        }
+        return true
+    }
+    Shortcut {
+        sequences: ["Return", "Enter"]
+        enabled: acNextPlayer.enabled && GamePlay.isLocalPlayer && isGameFocus()
+        onActivated: acNextPlayer.trigger()
+    }
     Action {
         id: acChallenge
         text: qsTr("Object Placed Word")
