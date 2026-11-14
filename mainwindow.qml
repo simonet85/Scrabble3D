@@ -228,6 +228,14 @@ ApplicationWindow {
         }
     }
     Action {
+        id: acResign
+        text: qsTr("Resign")
+        // the properties make the binding re-evaluate; canResign() alone has no change signal
+        enabled: GamePlay.isRunning && GamePlay.currentMove >= 0 && GamePlay.numberOfPlayers >= 0
+                 && !GamePlay.isConnected && GamePlay.canResign()
+        onTriggered: GamePlay.resign()
+    }
+    Action {
         id: acDictionary
         text: qsTr("Word Search")
         enabled: !GamePlay.isConnected || !GamePlay.isRunning

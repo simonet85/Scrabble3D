@@ -81,6 +81,7 @@ Dialog {
                                        "isComputer": configData["comp4"] === "true" || false})
             }
             cbRandomized.checked = configData["randomized"] === "true" || false
+            cbDrawFirst.checked = configData["drawFirst"] === "true" || false
         }
         buttons.enabled = true //disabled on okay while waiting on network poll
         newgame.focus = true
@@ -178,6 +179,12 @@ Dialog {
                     focus: false
                     enabled: !GamePlay.isConnected
                 }
+                CheckBox {
+                    id: cbDrawFirst
+                    text: qsTr("Draw a letter to decide who starts")
+                    focus: false
+                    enabled: !GamePlay.isConnected
+                }
             }
             GridLayout {
                 id: pnRight
@@ -252,8 +259,11 @@ Dialog {
         gameConfig["WordCheckPenalty"] = config.wordCheckPenalty
         gameConfig["WordCheckBonus"] = config.wordCheckBonus
         gameConfig["ScrabbleBonus"] = config.bingoBonus
+        gameConfig["ScrabbleExtraBonus"] = config.bingoExtraBonus
+        gameConfig["WordCheckPerWord"] = config.wordCheckPerWord
         gameConfig["IsCLABBERS"] = config.clabbers
         gameConfig["RandomSequence"] = cbRandomized.checked // -1 = generate
+        gameConfig["DrawFirst"] = cbDrawFirst.checked // FISF 2.1
         gameConfig["Seed"] = seed
         gameConfig["Performance"] = config.performance
 
@@ -279,6 +289,7 @@ Dialog {
             configData["comp4"] = playerNames.get(3).isComputer
             configData["playerCount"] = rbIndex
             configData["randomized"] = cbRandomized.checked
+            configData["drawFirst"] = cbDrawFirst.checked
             GamePlay.saveConfig("", configData) // player info only
             config.saveConfig("") //all other config
         }

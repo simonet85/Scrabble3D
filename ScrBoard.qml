@@ -121,11 +121,15 @@ Item {
                 keys: "scrPiece"
                 onEntered: (drag)=> {
                     rcPiece.border.color = Qt.darker(rcPiece.color)
+                    drag.source.dragTarget = "b" + index
                     drag.source.dragAccept = GamePlay.canDrop(index)
                 }
                 onExited: {
                     rcPiece.border.color = Qt.lighter(rcPiece.color)
-                    drag.source.dragAccept = false
+                    if (drag.source.dragTarget === "b" + index) {
+                        drag.source.dragTarget = ""
+                        drag.source.dragAccept = false
+                    }
                 }
                 onDropped: (drag)=> {
                     rcPiece.border.color = "transparent"
@@ -164,6 +168,7 @@ Item {
                             rackItem.y = p.y - fieldSize / 2
                             rackItem.z = Infinity
                             drag.target = rackItem
+                            rackItem.Drag.hotSpot = Qt.point(fieldSize / 2, fieldSize / 2) //piece is centred on the pointer
                             rackItem.Drag.active = true
                          }
                      }
@@ -199,20 +204,31 @@ Item {
             pieceIsJoker: isJoker
             pieceIsRandom: isRandom
             property bool dragAccept: false
+            property string dragTarget: "" //square or rack slot currently under the pointer; a late "exited"
+                                           //of the previous one must not cancel the "entered" of the next one
             property point dragStartedAt: Qt.point(0,0)
             Drag.active: maRack.drag.active
             Drag.keys: "scrPiece"
             DropArea {
                 keys: "scrPiece"
                 anchors.fill: parent
-                onEntered: (drag)=> { drag.source.dragAccept = true }
-                onExited: drag.source.dragAccept = false
+                onEntered: (drag)=> {
+                    drag.source.dragTarget = "r" + index
+                    drag.source.dragAccept = true
+                }
+                onExited: {
+                    if (drag.source.dragTarget === "r" + index) {
+                        drag.source.dragTarget = ""
+                        drag.source.dragAccept = false
+                    }
+                }
                 onDropped: (drag)=> GamePlay.dropLetterRack(drag.source.rackIndex, index)
             }
 
             MouseArea {
                 id: maRack
                 anchors.fill: parent
+                drag.threshold: 3 //the default (about 10-20 px) leaves the piece that far behind the pointer
                 cursorShape: drag.active ? (dragAccept ? Qt.DragLinkCursor : Qt.ClosedHandCursor) : Qt.ArrowCursor
                 acceptedButtons: Qt.LeftButton | Qt.RightButton
                 onPressed: (mouse) => {
@@ -222,6 +238,9 @@ Item {
                     } else
                     if ((mouse.button === Qt.LeftButton) && GamePlay.canDrag()) {
                        drag.target = parent
+                       // the drop target is the square under the pointer, not under the piece's top-left
+                       // corner (default hotSpot): otherwise dragging right lands one square too early
+                       rcPiece.Drag.hotSpot = Qt.point(mouse.x, mouse.y)
                        rcPiece.dragStartedAt = Qt.point(rcPiece.x, rcPiece.y)
                        rcPiece.z = Infinity //topmost z-order
                     }

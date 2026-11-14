@@ -285,11 +285,14 @@ void GamePlay::doNetworkChallengeResult(QVariantMap aMsg)
     if (aMsg["Result"].toBool()) {
         int i = m_lPlayerNames.indexOf(sChallengePlayer);
         if (i > -1) {
-            if (m_nWordCheckPenalty > 0) {
-                m_pGameCourseModel->addBonus(i, -m_nWordCheckPenalty);
+            const int nPenalty = (m_bWordCheckPerWord && m_pMoves.count() > 1)
+                                     ? m_nWordCheckPenalty * wordCount(m_pMoves[m_pMoves.count()-2])
+                                     : m_nWordCheckPenalty;
+            if (nPenalty > 0) {
+                m_pGameCourseModel->addBonus(i, -nPenalty);
                 m_pMsgModel->addMessage(tr("%1 illegitimately challenged the last move and receives a penalty of %2 points.")
                                             .arg(sChallengePlayer)
-                                            .arg(m_nWordCheckPenalty));
+                                            .arg(nPenalty));
             } else
                 m_pMsgModel->addMessage(tr("%1 illegitimately challenged the last move.")
                                             .arg(sChallengePlayer));
@@ -350,7 +353,7 @@ void GamePlay::doNetworkNextPlayer(QVariantMap aMsg)
                 exchangeLetter(aMsg["letter"+QString::number(i)].toInt());
 
         if (m_pRackModel->rackSize() == m_pMoves.last()->letterCount())
-            m_pMoves.last()->setBonus( m_nScrabbleBonus, true );
+            m_pMoves.last()->setBonus( scrabbleBonusFor(m_pMoves.last()->letterCount()), true );
     }
 
     // check move if !isLoading and !wcChallenge; nextPlayer is done in doNetworkAnswer()

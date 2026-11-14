@@ -7,6 +7,14 @@ TableView {
     Layout.fillWidth: true
 
     property bool newMessage: false
+    property bool followEnd: true //stay on the latest message unless the user scrolled up
+
+    function scrollToEnd() {
+        if (rows > 0)
+            contentY = Math.max(0, contentHeight - height)
+    }
+    onHeightChanged: if (followEnd) Qt.callLater(scrollToEnd)
+    onMovementEnded: followEnd = (contentY + height >= contentHeight - 2)
 
     TextMetrics {
         id: textMetrics
@@ -52,5 +60,9 @@ TableView {
             }
         }
     }
-    onContentHeightChanged: newMessage = true //show indicator on new messages
+    onContentHeightChanged: {
+        newMessage = true //show indicator on new messages
+        if (followEnd)
+            Qt.callLater(scrollToEnd)
+    }
 }

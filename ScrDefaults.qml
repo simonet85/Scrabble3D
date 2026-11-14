@@ -1136,7 +1136,7 @@ Item {
         property int penaltyCount: 1                //this value ought to be zero, but zero is prohibited in the program
         property bool gameLostByTime: false         //point 7
         property int wordCheckMode: 2
-        property int challengePenalty: 5            //point 5.3 - a penalty of n points per word not being a feature in Scrabble3D, a setting of 5 points per move has been chosen arbitrarily
+        property int challengePenalty: 5            //FISF 2026, 3.5.3: 5 points per word challenged wrongly (see challengePerWord)
         property int challengeTime: 20              //chosen arbitrarily
         property bool jokerExchange: false
         property bool changeIsPass: false           //not explicitly mentioned, therefore derived indirectly from point 4.2 and 4.3; JE CHANGE ≠ JE PASSE
@@ -1148,6 +1148,8 @@ Item {
         property int limitExchange: 7               //point 4.3
         property int endBonus: 0
         property int scrabbleBonus: 50
+        property int scrabbleExtraBonus: 25         //FISF 3.1.2c: +25 per additional piece in original formulas (racks > 7), no effect with 7 pieces
+        property bool challengePerWord: true        //FISF 3.5.3: 5 points per word challenged wrongly
         property var letters: [
             "A",1,9,
             "B",3,2,

@@ -11,6 +11,7 @@ GridLayout {
     onDefaultLetterSetChanged: {
         sbPasses.value = defaults.languages[defaultLetterSet].numberOfPasses
         sbBingo.value = defaults.languages[defaultLetterSet].scrabbleBonus
+        sbBingoExtra.value = defaults.languages[defaultLetterSet].scrabbleExtraBonus ?? 0
         sbGameEnd.value = defaults.languages[defaultLetterSet].endBonus
         cbAddLetters.checked = defaults.languages[defaultLetterSet].addLetters
         cbSubtractLetters.checked = defaults.languages[defaultLetterSet].subtractLetters
@@ -21,6 +22,7 @@ GridLayout {
 
     property alias sbPasses: sbPasses
     property alias sbBingo: sbBingo
+    property alias sbBingoExtra: sbBingoExtra
     property alias sbGameEnd: sbGameEnd
     property alias cbAddLetters: cbAddLetters
     property alias cbSubtractLetters: cbSubtractLetters
@@ -63,6 +65,23 @@ GridLayout {
             onValueChanged: config.bingoBonus = value
         }
         InfoTip { tiptext: qsTr("The 'bingo' bonus when all tiles from the rack are placed at once") }
+    }
+
+    ColorLabel {
+        id: lbBingoExtra
+        Layout.leftMargin: 8
+        Layout.alignment: Qt.AlignRight
+        text: qsTr("Extra bonus per additional tile:")
+    }
+    RowLayout {
+        ColorSpinBox {
+            id: sbBingoExtra
+            from: 0
+            to: 999
+            value: 0
+            onValueChanged: config.bingoExtraBonus = value
+        }
+        InfoTip { tiptext: qsTr("Original formulas with more than 7 tiles on the rack: each tile beyond the seventh adds this bonus to the 'bingo' bonus") }
     }
 
     ColorLabel {

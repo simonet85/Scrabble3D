@@ -38,6 +38,7 @@ ColumnLayout {
             LongMenuItem { action: acRecallPieces }
             LongMenuItem { action: acCambioSecco }
             LongMenuItem { action: acChallenge }
+            LongMenuItem { action: acResign }
             LongMenuItem { action: acComputeMove }
             MenuSeparator { }
             LongMenuItem { action: acNetwork }
