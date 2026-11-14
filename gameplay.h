@@ -22,6 +22,9 @@
 #include "configpath.h"
 #include "locmodel.h"
 #include "coachmodel.h"
+#include "gamereview.h"
+#include <QMap>
+#include <QPair>
 #include <QElapsedTimer>
 #include "dictionarymodel.h"
 #include "downloadmanager.h"
@@ -35,6 +38,7 @@ enum TimeControlType {tcNoLimit=0,
                       tcPerGame=2};
 
 class coach;
+class frenchsupplement;
 
 class GamePlay : public QObject
 {
@@ -44,6 +48,10 @@ class GamePlay : public QObject
     Q_PROPERTY(cubemodel* cubeModel READ cubeModel CONSTANT)
     Q_PROPERTY(rackmodel* rackModel READ rackModel CONSTANT)
     Q_PROPERTY(msgmodel* msgModel READ msgModel CONSTANT)
+    Q_PROPERTY(bool reviewRecording READ reviewRecording WRITE setReviewRecording NOTIFY reviewChanged)
+    Q_PROPERTY(bool reviewAvailable READ reviewAvailable NOTIFY reviewChanged)
+    Q_PROPERTY(bool soundEnabled READ soundEnabled WRITE setSoundEnabled NOTIFY soundChanged)
+    Q_PROPERTY(int soundVolume READ soundVolume WRITE setSoundVolume NOTIFY soundChanged)
     Q_PROPERTY(coachmodel* coachModel READ coachModel CONSTANT)
     Q_PROPERTY(bool coachAutoAdvice READ coachAutoAdvice WRITE setCoachAutoAdvice NOTIFY coachAutoAdviceChanged)
     Q_PROPERTY(QString coachServiceLabel READ coachServiceLabel NOTIFY coachServiceChanged)
@@ -89,6 +97,8 @@ class GamePlay : public QObject
 signals:
     void boardSizeChanged();
     void coachAutoAdviceChanged();
+    void soundChanged();
+    void reviewChanged();
     void coachServiceChanged();
     void isRunningChanged();
     void isComputingChanged();
@@ -171,6 +181,16 @@ public:
     Q_INVOKABLE void coachClearKey(const QString provider);
     Q_INVOKABLE void coachExplain(); // explains the best moves for the current rack
     Q_INVOKABLE void coachClearHistory();
+    // game review: the best move of each turn of the human players is recorded and compared at the end
+    bool reviewRecording();
+    void setReviewRecording(bool on);
+    bool reviewAvailable();
+    Q_INVOKABLE void gameReview();
+    bool soundEnabled();
+    void setSoundEnabled(bool on);
+    int soundVolume();
+    void setSoundVolume(int percent);
+    Q_INVOKABLE void testSound(); // plays the jingle of the Scrabble, whatever the setting
     bool coachAutoAdvice();
     void setCoachAutoAdvice(bool on);
     QString coachServiceLabel(); // "Groq - openai/gpt-oss-120b"
@@ -348,6 +368,14 @@ private:
     coach *m_pCoach = nullptr;
     bool m_bCoachBusy = false;
     coachmodel *m_pCoachModel = nullptr;
+    QMap<int, QPair<int, QString>> m_turnBest; // move number -> best score possible and its word
+    bool m_bReviewDone = false;
+    void recordTurnBest();          // after a computation of the moves of the current turn
+    void recordTurnBestSilently();  // computes and records without showing anything
+    void scheduleTurnBest();
+    void scheduleGameReview();
+    void runGameReview(const bool manual);
+    QList<gamereview::MoveRecord> reviewRecords();
     int m_nCoachRow = -1;         // row of the history that waits for the answer
     QElapsedTimer m_CoachTimer;
     coach *coachClient();
@@ -355,6 +383,7 @@ private:
     void coachBegin(const QString &kind, const QString &question); // adds the row of the history
     void coachExplainImpl(const bool automatic);
     void scheduleCoachAdvice();
+    void coachAdviceWhenFree(const int turn, const int attempt);
     QString coachBoardText();
     int m_nComputerLevel = 3;                 // computelevel::Level of the computer player (3 = Master)
     int chooseComputerMove();                 // index (0-based) of the move to play among the computed ones, -1 if none
@@ -411,6 +440,7 @@ private:
     DownloadManager *m_pDownloadManager;
 
     QTranslator *m_pTranslator;
+    QTranslator *m_pFrenchSupplement; // texts added after the downloaded translations were written
     QQmlEngine *m_pEngine;
     network *m_pNetwork;
 };

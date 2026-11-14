@@ -145,6 +145,7 @@ ColumnLayout {
             LongMenuItem { action: acResign }
             LongMenuItem { action: acCoachExplain }
             LongMenuItem { action: acCoachDefine }
+            LongMenuItem { action: acGameReview }
             LongMenuItem { action: acComputeMove }
             MenuSeparator { }
             LongMenuItem { action: acLoadGame }

@@ -45,6 +45,11 @@ public:
     void clear();
     void zerototal(const uint nPlayer) { m_Total[nPlayer] = 0; }
     QList<Letter> getRack(const int nMove) { return m_pData[nMove].rack; }
+    int moveCount() const { return int(m_pData.count()); }
+    int getWho(const int nMove) const { return int(m_pData[nMove].who); }
+    QString getWord(const int nMove) const { return m_pData[nMove].placedWord; }
+    int getValue(const int nMove) const { return m_pData[nMove].value; }
+    int getBestValue(const int nMove) const { return m_pData[nMove].bestValue; }
     int getBonus(const int nMove) { if (nMove < m_pData.count()) return m_pData[nMove].bonus; else return 0; }
     int getBonusWho(const int nMove) { if (nMove < m_pData.count()) return m_pData[nMove].bonuswho; else return -1; }
 

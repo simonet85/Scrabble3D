@@ -162,6 +162,20 @@ QString GamePlay::coachBoardText()
 
 void GamePlay::coachExplain() { coachExplainImpl(false); }
 
+// waits (at most about 3 seconds) until the engine is free, then gives the automatic advice of the turn
+void GamePlay::coachAdviceWhenFree(const int turn, const int attempt)
+{
+    if (!m_bIsRunning || m_bIsConnected || m_bIsHistory || m_nCurrentMove != turn ||
+        (m_lPlayerNames[m_nCurrentPlayer] == "Computer"))
+        return;
+    if (m_bIsComputing) {
+        if (attempt < 10)
+            QTimer::singleShot(300, this, [this, turn, attempt] { coachAdviceWhenFree(turn, attempt + 1); });
+        return;
+    }
+    coachExplainImpl(true);
+}
+
 // automatic: asked by the game itself at the start of the turn of a human; it stays silent when
 // something is missing (key, agreement) instead of bothering the player
 void GamePlay::coachExplainImpl(const bool automatic)
@@ -169,6 +183,11 @@ void GamePlay::coachExplainImpl(const bool automatic)
     if (!m_bIsRunning || m_bIsConnected || m_pBoard->is3D()) {
         if (!automatic)
             addMessage(tr("The coach is available in a running 2D game that is not played on the network."));
+        return;
+    }
+    if (m_bIsComputing) {
+        if (!automatic)
+            addMessage(tr("The computer is busy, try again in a moment."));
         return;
     }
     if (!coachReady(automatic))
@@ -338,9 +357,151 @@ void GamePlay::scheduleCoachAdvice()
     if (m_lPlayerNames[m_nCurrentPlayer] == "Computer")
         return;
     // after the end of the current event, so that the new turn is completely set up
-    QTimer::singleShot(150, this, [this] {
-        if (m_bIsRunning && !m_bIsConnected && !m_bIsHistory && !m_bIsComputing &&
-            (m_lPlayerNames[m_nCurrentPlayer] != "Computer"))
-            coachExplainImpl(true);
+    const int turn = m_nCurrentMove;
+    QTimer::singleShot(150, this, [this, turn] { coachAdviceWhenFree(turn, 0); });
+}
+
+// ---------------------------------------------------------------------------------------------
+// Game review: the best move of each turn of the human players is recorded (silently, at the start of
+// the turn) and compared with the move that was played when the game is over.
+
+bool GamePlay::reviewRecording() { return coachClient()->flag("reviewRecording", true); }
+
+void GamePlay::setReviewRecording(bool on)
+{
+    if (reviewRecording() == on)
+        return;
+    coachClient()->setFlag("reviewRecording", on);
+    emit reviewChanged();
+    if (on)
+        scheduleTurnBest();
+}
+
+QList<gamereview::MoveRecord> GamePlay::reviewRecords()
+{
+    QList<gamereview::MoveRecord> records;
+    for (int i = 0; i < m_pGameCourseModel->moveCount(); i++) {
+        const int who = m_pGameCourseModel->getWho(i);
+        if (who < 0 || who >= m_lPlayerNames.count() || m_lPlayerNames[who] == "Computer")
+            continue;
+        gamereview::MoveRecord r;
+        r.number = i / int(qMax<uint>(1, m_nPlayerCount)) + 1;
+        r.player = m_lPlayerNames[who];
+        r.playedWord = m_pGameCourseModel->getWord(i);
+        r.playedValue = m_pGameCourseModel->getValue(i);
+        r.bestValue = m_pGameCourseModel->getBestValue(i);
+        r.bestWord = m_turnBest.value(i).second;
+        records.append(r);
+    }
+    return records;
+}
+
+bool GamePlay::reviewAvailable()
+{
+    if (m_bIsRunning)
+        return false;
+    for (const gamereview::MoveRecord &r : reviewRecords())
+        if (r.bestValue > 0)
+            return true;
+    return false;
+}
+
+// records the result of a computation of the moves made at the start of a turn
+void GamePlay::recordTurnBest()
+{
+    if (m_bIsHistory || m_bIsConnected)
+        return;
+    const bool found = m_nComputeResults > 0;
+    m_turnBest[m_nCurrentMove] = qMakePair(found ? int(m_pComputeMove->result(0)->Value()) : 0,
+                                           found ? m_pComputeMove->result(0)->PlacedWord : QString());
+}
+
+// computes the best move of the current turn of a human without showing anything: the moves found are not
+// kept, so that this can never be used as a hint
+void GamePlay::recordTurnBestSilently()
+{
+    if (!m_bIsRunning || m_bIsConnected || m_bIsHistory || m_pBoard->is3D() || !reviewRecording())
+        return;
+    if (m_lPlayerNames.isEmpty() || m_lPlayerNames[m_nCurrentPlayer] == "Computer")
+        return;
+    if (m_turnBest.contains(m_nCurrentMove))
+        return; // already known (the coach or the player computed the moves of this turn)
+    if (m_pMoves.last()->letterCount() > 0)
+        return; // the player has started to place pieces: the rack is no longer complete
+    if (m_bIsComputing) {
+        // the engine is busy (the coach or the player): try again shortly, for the same turn
+        const int turn = m_nCurrentMove;
+        QTimer::singleShot(300, this, [this, turn] { if (m_nCurrentMove == turn) recordTurnBestSilently(); });
+        return;
+    }
+    m_bIsComputing = true; emit isComputingChanged();
+    m_pComputeMove->run(m_bIsFirstMove, m_pBoard, m_pRackModel, m_pDictionary);
+    m_bIsComputing = false; emit isComputingChanged();
+    recordTurnBest();
+    m_pComputeMove->clear();
+    setComputeResults(0);
+}
+
+void GamePlay::scheduleTurnBest()
+{
+    if (!m_bIsRunning || m_bIsConnected || m_lPlayerNames.isEmpty() || !reviewRecording())
+        return;
+    if (m_lPlayerNames[m_nCurrentPlayer] == "Computer")
+        return;
+    // after the automatic advice of the coach (which computes the moves too) and the end of the current event
+    QTimer::singleShot(400, this, [this] { recordTurnBestSilently(); });
+}
+
+void GamePlay::scheduleGameReview()
+{
+    if (m_bReviewDone || m_bIsConnected || !reviewRecording())
+        return;
+    QTimer::singleShot(800, this, [this] {
+        if (!m_bIsRunning && !m_bReviewDone)
+            runGameReview(false);
     });
+}
+
+void GamePlay::gameReview() { runGameReview(true); }
+
+void GamePlay::runGameReview(const bool manual)
+{
+    const QList<gamereview::PlayerSummary> all = gamereview::summarize(reviewRecords(), 3);
+    QList<gamereview::PlayerSummary> usable;
+    int analysed = 0;
+    for (const gamereview::PlayerSummary &s : all)
+        if (s.analysed > 0) {
+            usable.append(s);
+            analysed += s.analysed;
+        }
+    if (usable.isEmpty()) {
+        if (manual)
+            addMessage(tr("Game review: no data. The best move is recorded at the start of each of your turns (option of the Coach tab)."));
+        return;
+    }
+    m_bReviewDone = true;
+
+    QString html, facts;
+    for (const gamereview::PlayerSummary &s : usable) {
+        if (!html.isEmpty())
+            html += QStringLiteral("<br><br>");
+        html += gamereview::toHtml(s);
+        facts += gamereview::toCoachFacts(s) + QStringLiteral("\n");
+    }
+    // the figures are computed by the game: they are shown at once, with or without a coach
+    const int id = m_pCoachModel->addPending(QStringLiteral("Scrabble3D"), tr("computed by the game"), "review",
+                                             tr("Review of the game: %1 moves analysed").arg(analysed));
+    m_pCoachModel->setDone(id, html, -1);
+    m_pMsgModel->addMessage(html);
+
+    // the comment of the coach: asked by hand, or automatically when the automatic advice is on
+    const bool askCoach = manual ? coachReady(false) : (coachClient()->autoAdvice() && coachReady(true));
+    if (!askCoach)
+        return;
+    const QString user = QStringLiteral("Bilan de la partie, calcule par le jeu (compare chaque coup au meilleur coup possible a ce tour) :\n")
+                         + facts
+                         + QStringLiteral("Il n'y a pas de coup a conseiller ici : en 2 phrases courtes (50 mots au maximum), donne le principal "
+                                          "axe de progres du joueur, en t'appuyant seulement sur ces chiffres. N'invente aucun mot ni aucun score.");
+    coachBegin("reviewcomment", tr("Comment of the coach on the review"));
+    coachClient()->ask(QString::fromUtf8(coachSystem), user, 300, 0.3);
 }
