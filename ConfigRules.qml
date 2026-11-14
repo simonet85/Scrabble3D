@@ -162,6 +162,24 @@ GridLayout {
     ColorLabel {
         Layout.leftMargin: 8
         Layout.topMargin: 16
+        text: qsTr("Hints per game:")
+    }
+    RowLayout {
+        Layout.columnSpan: 2
+        Layout.leftMargin: 16
+        Layout.topMargin: 16
+        ColorSpinBox {
+            from: 0
+            to: 20
+            value: GamePlay.hintsPerGame
+            onValueModified: GamePlay.hintsPerGame = value
+        }
+        InfoTip { tiptext: qsTr("How many times the Hint button can be used in a game. The first hint of a turn shows where a good move can be played, a second one shows the word. 0 turns the button off.") }
+    }
+
+    ColorLabel {
+        Layout.leftMargin: 8
+        Layout.topMargin: 16
         text: qsTr("Computer level:")
     }
     RowLayout {

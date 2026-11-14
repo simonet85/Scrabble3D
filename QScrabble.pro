@@ -15,6 +15,7 @@ SOURCES += \
         coach.cpp \
         coachmodel.cpp \
         gamereview.cpp \
+        gameplay_hint.cpp \
         frenchsupplement.cpp \
         computelevel.cpp \
         cubemodel.cpp \

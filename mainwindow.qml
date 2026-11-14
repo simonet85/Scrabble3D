@@ -246,6 +246,12 @@ ApplicationWindow {
         onTriggered: { main.showCoach(); GamePlay.coachDefine() }
     }
     Action {
+        id: acHint
+        text: qsTr("Hint")
+        enabled: GamePlay.isRunning && GamePlay.isLocalPlayer && GamePlay.hintAvailable
+        onTriggered: GamePlay.hint()
+    }
+    Action {
         id: acGameReview
         text: qsTr("Game review")
         enabled: !GamePlay.isRunning && GamePlay.reviewAvailable

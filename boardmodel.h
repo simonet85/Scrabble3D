@@ -1,6 +1,8 @@
 #pragma once
 
 #include <QAbstractListModel>
+#include <QList>
+#include <QSet>
 #include "board.h"
 
 class boardmodel : public QAbstractListModel
@@ -18,7 +20,8 @@ public:
         BonusTopRole,
         BonusBottomRole,
         BonusLeftRole,
-        BonusRightRole
+        BonusRightRole,
+        IsHintRole
     };
 
     explicit boardmodel(QObject *parent = nullptr, board* aBoard = nullptr);
@@ -29,10 +32,14 @@ public:
     void reset(); //resetmodel() -> after initialization of board the boardmodel needs to be updated
     void updateSquare(Point3D aPos); // after dropletter -> WhatRole ... IsPlacedRole
     void updateAllSquares(); //after placeletters() -> WhatRole ... IsPlacedRole
+    void setHint(const QList<Point3D> &squares); // squares highlighted by a hint (replaces the previous ones)
+    void clearHint();
+    int hintCount() const { return int(m_hint.size()); }
 
 protected:
     QHash<int, QByteArray> roleNames() const Q_DECL_OVERRIDE;
 
 private:
     board *m_pBoard;
+    QSet<int> m_hint; // 2D indexes of the highlighted squares
 };

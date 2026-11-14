@@ -44,6 +44,8 @@ public:
     bool autoAdvice() const;       // the game asks for advice itself at the start of each human turn
     bool flag(const QString &name, bool defaultValue) const; // other yes/no settings of the coach tab
     void setFlag(const QString &name, bool value);
+    int number(const QString &name, int defaultValue) const; // numeric settings (hints per game)
+    void setNumber(const QString &name, int value);
     void setAutoAdvice(bool on);
 
     // Body of a request for the provider in use (public for tests)

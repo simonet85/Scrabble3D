@@ -190,6 +190,19 @@ void coach::setFlag(const QString &name, bool value)
     s.sync();
 }
 
+int coach::number(const QString &name, int defaultValue) const
+{
+    QSettings s = openSettings(m_sSettingsPath);
+    return s.value(name, defaultValue).toInt();
+}
+
+void coach::setNumber(const QString &name, int value)
+{
+    QSettings s = openSettings(m_sSettingsPath);
+    s.setValue(name, value);
+    s.sync();
+}
+
 QString coach::requestUrl() const
 {
     const QString p = provider();

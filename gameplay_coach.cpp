@@ -488,6 +488,10 @@ void GamePlay::runGameReview(const bool manual)
         html += gamereview::toHtml(s);
         facts += gamereview::toCoachFacts(s) + QStringLiteral("\n");
     }
+    if (m_nHintsUsed > 0) {
+        html += QStringLiteral("<br><br>") + tr("Hints used: %1 of %2.").arg(m_nHintsUsed).arg(hintsPerGame());
+        facts += QStringLiteral("Indices utilises par le joueur : %1 sur %2.\n").arg(m_nHintsUsed).arg(hintsPerGame());
+    }
     // the figures are computed by the game: they are shown at once, with or without a coach
     const int id = m_pCoachModel->addPending(QStringLiteral("Scrabble3D"), tr("computed by the game"), "review",
                                              tr("Review of the game: %1 moves analysed").arg(analysed));
