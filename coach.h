@@ -56,6 +56,7 @@ public:
     // Temporary errors of the service (overload, rate limit) are tried a second time after this delay
     void setRetryDelay(int milliseconds) { m_nRetryDelay = milliseconds; }
     static bool isRetryable(int httpStatus);
+    void setTimeout(int milliseconds) { m_nTimeout = milliseconds; } // how long to wait for an answer
 
     // Asynchronous request; answers through answered() or failed()
     void ask(const QString &system, const QString &user, int maxTokens = 700, double temperature = 0.3);
@@ -68,6 +69,7 @@ private:
     QString key(const QString &name, const QString &provider) const; // settings key of a provider
     void post(const QNetworkRequest &request, const QByteArray &payload, int attempt);
     int m_nRetryDelay = 2000;
+    int m_nTimeout = 45000;
     QString m_sSettingsPath;
     QNetworkAccessManager m_Network;
 };

@@ -187,7 +187,7 @@ QJsonObject coach::buildRequest(const QString &system, const QString &user, int 
         message["role"] = "user";
         message["content"] = user;
         body["max_tokens"] = maxTokens;
-        body["temperature"] = temperature;
+        // no temperature: the recent Claude models refuse the parameter ("temperature is deprecated for this model")
         body["system"] = system;
         body["messages"] = QJsonArray{message};
     } else if (provider() == QLatin1String(Gemini)) {
@@ -313,7 +313,7 @@ void coach::ask(const QString &system, const QString &user, int maxTokens, doubl
     } else {
         request.setRawHeader("Authorization", "Bearer " + apiKey.toUtf8());
     }
-    request.setTransferTimeout(45000);
+    request.setTransferTimeout(m_nTimeout);
 
     const QByteArray payload = QJsonDocument(buildRequest(system, user, maxTokens, temperature)).toJson(QJsonDocument::Compact);
     post(request, payload, 0);
@@ -332,6 +332,7 @@ void coach::post(const QNetworkRequest &request, const QByteArray &payload, int 
         const QByteArray body = reply->readAll();
         const int status = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
         const QString errorText = reply->errorString();
+        const bool timedOut = (reply->error() == QNetworkReply::TimeoutError) || (reply->error() == QNetworkReply::OperationCanceledError);
         reply->deleteLater();
 
         if (isRetryable(status) && attempt < 1) {
@@ -347,8 +348,10 @@ void coach::post(const QNetworkRequest &request, const QByteArray &payload, int 
                 emit answered(text);
         } else if (status > 0) {
             emit failed(parseError(status, body));
+        } else if (timedOut) {
+            emit failed(tr("The service did not answer in time. Try again, or choose another service in Configuration > AI coach."));
         } else {
-            // no HTTP answer: offline, DNS, timeout ...
+            // no HTTP answer: offline, DNS ...
             emit failed(tr("The service cannot be reached: %1").arg(errorText));
         }
     });

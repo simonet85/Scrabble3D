@@ -1,6 +1,7 @@
 #include "gameplay.h"
 #include "coach.h"
 #include "configpath.h"
+#include "computelevel.h"
 
 #include <QMessageBox>
 #include <QTimer>
@@ -15,6 +16,9 @@ static const char *coachSystem =
     "- Ne parle jamais des cases primes (lettre ou mot compte double ou triple) : tu ne les connais pas ; "
     "parle seulement des points fournis, des lettres gardees et de l'ouverture du plateau.\n"
     "- Tu n'inventes rien : si une information n'est pas dans les donnees, ne l'affirme pas.\n"
+    "- Les tuiles jouees et les lettres gardees de chaque coup sont fournies : reprends-les telles quelles, "
+    "ne deduis jamais toi-meme les lettres qui restent et ne cite aucune lettre ou aucun mot absents des donnees.\n"
+    "- Un mot peut utiliser des tuiles deja posees sur le plateau : seules les tuiles jouees viennent du chevalet.\n"
     "- Tu n'es pas l'arbitre : ne dis jamais qu'un mot est valide ou invalide au Scrabble, "
     "le dictionnaire du jeu en decide.";
 
@@ -173,49 +177,117 @@ void GamePlay::coachExplainImpl(const bool automatic)
     if (m_nComputeResults == 0)
         return; // computeMove() has already said that no word was found
 
+    // the pieces really on the rack: with an empty bag some slots are empty
+    const int nRack = m_pRackModel->rackSize();
+    QList<computelevel::KeptPiece> rackPieces;
+    QList<bool> onRack;
     QString rack;
-    for (int i = 0; i < m_pRackModel->rackSize(); i++) {
+    for (int i = 0; i < nRack; i++) {
         const Letter l = m_pRackModel->getLetter(i);
-        rack += l.IsJoker ? QStringLiteral("?") : l.What;
+        const bool piece = (l.State == LetterState::lsRack) && !l.What.isEmpty() && (l.What != QString(QChar(0)));
+        onRack.append(piece);
+        computelevel::KeptPiece kp;
+        kp.what = l.What;
+        kp.isJoker = l.IsJoker;
+        kp.value = l.Value;
+        rackPieces.append(kp);
+        if (piece)
+            rack += l.IsJoker ? QStringLiteral("?") : l.What;
     }
     QString scores;
     for (uint p = 0; p < m_nPlayerCount; p++)
         scores += m_lPlayerNames[p] + " " + QString::number(m_pGameCourseModel->getScore(p)) + "  ";
 
-    QString moves;
-    const int top = qMin(5, m_nComputeResults);
-    for (int i = 0; i < top; i++) {
+    // what each candidate move uses and keeps: computed here, so that the model never has to guess it
+    struct Candidate {
+        int index = 0;
+        int score = 0;
+        QList<computelevel::KeptPiece> kept;
+        double equity = 0;
+    };
+    const bool bagEmpty = m_lBag.isEmpty();
+    const int nCandidates = qMin(m_nComputeResults, 40);
+    QList<Candidate> candidates;
+    QVector<int> scoreList;
+    QVector<double> equityList;
+    for (int i = 0; i < nCandidates; i++) {
         const sharedMove aMove = m_pComputeMove->result(i);
+        QList<bool> used(nRack, false);
+        for (int j = 0; j < aMove->letterCount(); j++) {
+            const int pos = aMove->getLetter(j).RackPos;
+            if (pos >= 0 && pos < nRack)
+                used[pos] = true;
+        }
+        Candidate c;
+        c.index = i;
+        c.score = int(aMove->Value());
+        for (int k = 0; k < nRack; k++)
+            if (onRack[k] && !used[k])
+                c.kept.append(rackPieces[k]);
+        c.equity = computelevel::equity(c.score, c.kept, bagEmpty);
+        candidates.append(c);
+        scoreList.append(c.score);
+        equityList.append(c.equity);
+    }
+    // the recommended move is chosen by the engine, not by the model: best balance between the points
+    // and the pieces kept among the moves at most 30 points below the best score
+    QRandomGenerator rng(0);
+    int recommended = computelevel::pickMove(computelevel::Master, scoreList, equityList, rng);
+    if (recommended < 0)
+        recommended = 0;
+    QList<int> order{recommended};
+    for (int i = 0; i < nCandidates && order.size() < 5; i++)
+        if (i != recommended)
+            order.append(i);
+
+    QString moves;
+    for (int k = 0; k < order.size(); k++) {
+        const Candidate &c = candidates[order[k]];
+        const sharedMove aMove = m_pComputeMove->result(c.index);
         const Letter first = aMove->getLetter(0);
-        moves += QString("%1. %2%3 - %4 points - first tile on %5%6, %7\n")
-                     .arg(i + 1)
-                     .arg(aMove->PlacedWord,
-                          aMove->ConnectedWords.isEmpty() ? QString() : " (+ " + aMove->ConnectedWords + ")")
-                     .arg(aMove->Value())
-                     .arg(QChar('A' + first.Point.y()))
-                     .arg(first.Point.x() + 1)
-                     .arg(aMove->activeDimension() == dmOrdinate ? QStringLiteral("vertical") : QStringLiteral("horizontal"));
+        QString keptLetters;
+        int keptValue = 0;
+        for (const computelevel::KeptPiece &piece : c.kept) {
+            keptLetters += piece.isJoker ? QStringLiteral("?") : piece.what;
+            keptValue += piece.value;
+        }
+        QString keptText;
+        if (c.kept.isEmpty())
+            keptText = bagEmpty ? QStringLiteral("aucune, le chevalet est vide : ce coup termine la partie")
+                                : QStringLiteral("aucune, tout le chevalet est joue");
+        else
+            keptText = keptLetters + QStringLiteral(" (") + QString::number(keptValue) + QStringLiteral(" points de lettres)");
+        moves += (k == 0 ? QStringLiteral("COUP RECOMMANDE : ") : QStringLiteral("autre coup : "))
+                 + aMove->PlacedWord
+                 + (aMove->ConnectedWords.isEmpty() ? QString() : QStringLiteral(" (+ ") + aMove->ConnectedWords + QStringLiteral(")"))
+                 + QStringLiteral(" - ") + QString::number(c.score) + QStringLiteral(" points - ")
+                 + QString::number(aMove->letterCount()) + QStringLiteral(" tuiles du chevalet jouees, premiere tuile posee en ")
+                 + QChar('A' + first.Point.y()) + QString::number(first.Point.x() + 1)
+                 + (aMove->activeDimension() == dmOrdinate ? QStringLiteral(" (vertical)") : QStringLiteral(" (horizontal)"))
+                 + QStringLiteral(" - lettres gardees : ") + keptText + QStringLiteral("\n");
     }
 
-    const QString user = QString(
+    QString user = QStringLiteral(
         "Plateau classique 15x15 (colonnes 1 a 15 de gauche a droite, lignes A a O de haut en bas ; "
-        "'.' = case vide, minuscule = joker) :\n%1\n"
-        + QString(m_bIsFirstMove ? "(coup d'ouverture : le plateau est vide)\n" : "") +
-        "Chevalet du joueur ('?' = joker) : %2\n"
-        "Lettres restantes dans le sac : %3\n"
-        "Scores : %4\n\n"
-        "Meilleurs coups trouves par le moteur :\n%5\n"
-        "Explique en quelques lignes quel coup tu conseilles et pourquoi (points du moteur, lettres gardees).")
-        .arg(coachBoardText(), rack)
-        .arg(m_lBag.count())
-        .arg(scores, moves);
+        "'.' = case vide, minuscule = joker) :\n") + coachBoardText() + QStringLiteral("\n");
+    if (m_bIsFirstMove)
+        user += QStringLiteral("(coup d'ouverture : le plateau est vide)\n");
+    user += QStringLiteral("Chevalet du joueur ('?' = joker) : ") + rack + QStringLiteral("\n");
+    user += QStringLiteral("Lettres restantes dans le sac : ") + QString::number(m_lBag.count()) + QStringLiteral("\n");
+    if (bagEmpty)
+        user += QStringLiteral("Le sac est vide : les lettres gardees seront retranchees du score en fin de partie, "
+                               "et le joueur qui vide son chevalet termine la partie.\n");
+    user += QStringLiteral("Scores : ") + scores + QStringLiteral("\n\nCoups calcules par le moteur (tuiles jouees et lettres gardees "
+                           "sont calculees par le jeu, ne les deduis pas toi-meme) :\n") + moves
+         + QStringLiteral("Explique en quelques lignes pourquoi le COUP RECOMMANDE est un bon choix, en citant ses points et ses "
+                          "lettres gardees exactement comme indiques ci-dessus. Ne cite aucune autre lettre.");
 
     coachBegin(automatic ? "auto" : "advice",
-               tr("Rack %1 - %2 possible moves, the best one: %3 (%4 points)")
+               tr("Rack %1 - %2 possible moves, recommended: %3 (%4 points)")
                    .arg(rack)
                    .arg(m_nComputeResults)
-                   .arg(m_pComputeMove->result(0)->PlacedWord)
-                   .arg(m_pComputeMove->result(0)->Value()));
+                   .arg(m_pComputeMove->result(candidates[recommended].index)->PlacedWord)
+                   .arg(candidates[recommended].score));
     if (!automatic)
         addMessage(tr("The coach is thinking..."));
     coachClient()->ask(QString::fromUtf8(coachSystem), user, 800, 0.3);
