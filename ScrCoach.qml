@@ -13,13 +13,23 @@ Dialog {
     padding: 12
     width: Math.min(scrabble3D.width - 24, 460)
 
+    readonly property var providers: ["groq", "gemini", "anthropic"]
     property bool hasKey: false
 
-    onAboutToShow: {
-        hasKey = GamePlay.coachHasKey()
+    function currentProvider() { return providers[provider.currentIndex] }
+
+    // fills the fields with what is saved for the selected service
+    function showProvider() {
+        const info = GamePlay.coachInfo(currentProvider())
+        hasKey = info.hasKey
         apiKey.text = ""
-        apiKey.placeholderText = hasKey ? GamePlay.coachMaskedKey() : qsTr("Paste your API key here")
-        model.text = GamePlay.coachModel()
+        apiKey.placeholderText = hasKey ? info.masked : qsTr("Paste your API key here")
+        model.text = info.model
+    }
+
+    onAboutToShow: {
+        provider.currentIndex = Math.max(0, providers.indexOf(GamePlay.coachProvider()))
+        showProvider()
     }
 
     contentItem: ColumnLayout {
@@ -29,7 +39,14 @@ Dialog {
             wrapMode: Text.WordWrap
             text: qsTr("The coach explains the best moves and defines the words played. It only advises: the dictionary alone decides whether a word is valid, the answers of the coach are never used for that.")
         }
-        Label { text: qsTr("API key (Anthropic):") }
+        Label { text: qsTr("Service:") }
+        ComboBox {
+            id: provider
+            Layout.fillWidth: true
+            model: ["Groq", "Gemini (Google)", "Anthropic"]
+            onActivated: coachDialog.showProvider()
+        }
+        Label { text: qsTr("API key:") }
         TextField {
             id: apiKey
             Layout.fillWidth: true
@@ -48,18 +65,17 @@ Dialog {
             wrapMode: Text.WordWrap
             font.pixelSize: 12
             color: "#b00020"
-            text: qsTr("The key is stored in a file of your user profile (coach.ini), not encrypted. The coach sends the board, your rack and the best moves to the online service, which is paid per use with your key. Nothing is sent as long as you do not ask the coach.")
+            text: qsTr("The key is stored in a file of your user profile (coach.ini), not encrypted. The coach sends the board, your rack and the best moves to the online service, which may charge your key. Nothing is sent as long as you do not ask the coach.")
         }
         Button {
             text: qsTr("Remove the saved key")
             enabled: coachDialog.hasKey
             onClicked: {
-                GamePlay.coachClearKey()
-                coachDialog.hasKey = false
-                apiKey.placeholderText = qsTr("Paste your API key here")
+                GamePlay.coachClearKey(coachDialog.currentProvider())
+                coachDialog.showProvider()
             }
         }
     }
 
-    onAccepted: GamePlay.coachSave(apiKey.text, model.text)
+    onAccepted: GamePlay.coachSave(currentProvider(), apiKey.text, model.text)
 }

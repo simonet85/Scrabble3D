@@ -8,6 +8,8 @@ ColumnLayout {
     property alias cube: cube
     property alias messages: messages
 
+    function showCoach() { tabs.setCurrentIndex(3) } // the Coach tab, called when the coach is asked
+
     anchors.fill: parent
     spacing: 0
 
@@ -179,6 +181,7 @@ ColumnLayout {
                     ScrMessages { id: messages }
                     ScrGameCourse { id: statistics }
                     ScrPlayers { id: players; visible: GamePlay.isConnected }
+                    ScrCoachPanel { id: coachPanel }
                 }
                 TextField {
                     id: chatMsg
@@ -196,8 +199,10 @@ ColumnLayout {
                     background: Rectangle {
                         color: "transparent"
                     }
-                    onCurrentIndexChanged:
+                    onCurrentIndexChanged: {
                         if (currentIndex === 0) messages.newMessage = false
+                        if (currentIndex === 3) coachPanel.newEntry = false
+                    }
                     TabButton {
                         text: qsTr("Messages")
                         width: contentItem.implicitWidth + leftPadding + 2*rightPadding
@@ -221,6 +226,20 @@ ColumnLayout {
                         width: contentItem.implicitWidth + leftPadding + rightPadding
                         visible: GamePlay.isConnected
                         onVisibleChanged: visible ? tabs.setCurrentIndex(2) : tabs.setCurrentIndex(0)
+                    }
+                    TabButton {
+                        text: qsTr("Coach")
+                        width: contentItem.implicitWidth + leftPadding + 2*rightPadding
+                        indicator: Rectangle { //red dot when the coach has something new
+                            property int size: 5
+                            width: size; height: size; radius: size
+                            anchors.right: parent.right
+                            anchors.top: parent.top
+                            anchors.rightMargin: 2
+                            anchors.topMargin: 2
+                            color: "#FF0000"
+                            visible: coachPanel.newEntry && tabs.currentIndex !== 3
+                        }
                     }
                 }
             }

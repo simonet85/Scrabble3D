@@ -7,6 +7,8 @@ ColumnLayout {
     property alias messages: messages
     property alias cube: cube
 
+    function showCoach() { } // the coach tab exists in the desktop layout only
+
     anchors.fill: parent
 
     component LongMenuItem: MenuItem {

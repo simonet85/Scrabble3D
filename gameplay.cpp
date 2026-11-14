@@ -22,6 +22,7 @@ GamePlay::GamePlay(QQmlEngine *engine)
     m_pCubeModel = new cubemodel(this, m_pBoard);
     m_pMsgModel = new msgmodel(this);
     m_pGameCourseModel = new gamecoursemodel(this);
+    m_pCoachModel = new coachmodel(this);
     QObject::connect(m_pGameCourseModel, SIGNAL(onSelectedMoveChanged(int)),
                      this, SLOT(doSelectedMoveChanged(int)));
 
@@ -332,6 +333,8 @@ void GamePlay::resign()
 
 void GamePlay::startNewGame(QVariantMap gameConfig)
 {
+    if (!gameConfig["IsLoading"].toBool())
+        m_pCoachModel->clear();
     doSelectedMoveChanged(-1);
     m_lPlayerNames.clear();
     emit numberOfPlayersChanged(); //refreh names in case the number is equal
@@ -487,6 +490,8 @@ void GamePlay::startNewGame(QVariantMap gameConfig)
         QCoreApplication::processEvents(QEventLoop::AllEvents);
         doComputeMove();
     }
+    else if (!gameConfig["IsLoading"].toBool())
+        scheduleCoachAdvice(); // automatic advice for a human who opens the game
 }
 
 void GamePlay::nextPlayer(const bool bIsLoading)
@@ -670,6 +675,8 @@ void GamePlay::nextPlayer(const bool bIsLoading)
         QCoreApplication::processEvents(QEventLoop::AllEvents);
         doComputeMove();
     }
+    else if (!bIsLoading)
+        scheduleCoachAdvice(); // automatic advice at the start of the turn of a human
 }
 
 void GamePlay::doGameEnd()

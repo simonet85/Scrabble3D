@@ -13,6 +13,7 @@ SOURCES += \
         boardmodel.cpp \
         computemove.cpp \
         coach.cpp \
+        coachmodel.cpp \
         computelevel.cpp \
         cubemodel.cpp \
         dictionary.cpp \
@@ -39,6 +40,7 @@ HEADERS += \
         boardmodel.h \
         computemove.h \
         coach.h \
+        coachmodel.h \
         serveraddress.h \
         computelevel.h \
         configpath.h \

@@ -237,13 +237,13 @@ ApplicationWindow {
         id: acCoachExplain
         text: qsTr("Coach: explain the best moves")
         enabled: GamePlay.isRunning && !GamePlay.isConnected && !GamePlay.isComputing
-        onTriggered: GamePlay.coachExplain()
+        onTriggered: { main.showCoach(); GamePlay.coachExplain() }
     }
     Action {
         id: acCoachDefine
         text: qsTr("Coach: define the last words")
         enabled: GamePlay.isRunning && !GamePlay.isConnected
-        onTriggered: GamePlay.coachDefine()
+        onTriggered: { main.showCoach(); GamePlay.coachDefine() }
     }
     Action {
         id: acCoachConfig
