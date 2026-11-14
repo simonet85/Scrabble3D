@@ -17,7 +17,11 @@
   l'ordinateur et en 3D. Le bilan de partie indique les indices utilisés.
 - [x] **3. Réglage du son** : case « Son lors d'un Scrabble », volume (jingle généré en mémoire, donc vrai réglage de
   volume), bouton Tester. Page Configuration > Plateau.
-- [ ] 4. Défense au niveau Maître : éviter d'offrir des cases « mot compte triple » à l'adversaire.
+- [x] **4. Défense au niveau Maître.** Un coup qui rend accessibles à l'adversaire des cases « mot compte » encore
+  libres (une tuile à 4 cases ou moins sur la même ligne ou colonne) est pénalisé : 10 points pour un triple,
+  3 pour un double. Le Maître, l'indice et le coup recommandé par le coach utilisent la même règle ; le coach sait
+  pour chaque coup s'il ouvre une case prime. Sur une partie de 12 tours : risque cumulé 96 → 25 points, pour
+  5 points de moins marqués (342 contre 347).
 - [x] **5. Messages en français** : tous les textes ajoutés au jeu (99) ont une traduction française intégrée, qui
   complète la traduction téléchargée sans la remplacer (`frenchsupplement`).
 
@@ -76,5 +80,7 @@
 - Gemini est parfois lent ou en surcharge.
 - Le coach peut encore se tromper sur des détails ; ses conseils sont indicatifs.
 - Les clés d'API sont stockées sans chiffrement dans `coach.ini` (voir la tâche 11).
+- Le bilan compare chaque coup au coup qui rapporte le plus de points : un coup défensif, volontairement moins
+  payant, y apparaît comme une perte.
 - Le bilan de partie n'existe que pour les parties jouées avec l'enregistrement actif (les parties chargées n'ont pas
   de meilleur coup enregistré).
