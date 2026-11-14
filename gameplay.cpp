@@ -338,6 +338,8 @@ void GamePlay::resign()
     emit statInfoChanged();
     emit statTotalChanged();
     emit reviewChanged();
+    m_pBoardModel->clearHint();
+    emit hintChanged();
     scheduleGameReview();
 }
 
@@ -346,6 +348,10 @@ void GamePlay::startNewGame(QVariantMap gameConfig)
     if (!gameConfig["IsLoading"].toBool()) {
         m_pCoachModel->clear();
         m_turnBest.clear();
+        m_nHintsUsed = 0;
+        m_nHintTurn = -1;
+        m_nHintLevel = 0;
+        m_pBoardModel->clearHint();
         m_bReviewDone = false;
         emit reviewChanged();
     }
@@ -683,6 +689,10 @@ void GamePlay::nextPlayer(const bool bIsLoading)
         saveGame(config::file("lastgame.ssg"), true); //silent
 #endif
 
+    // the hint of the turn that ends is no longer shown
+    m_pBoardModel->clearHint();
+    emit hintChanged();
+
     //clear computemove
     m_pComputeMove->clear();
 
@@ -788,6 +798,8 @@ void GamePlay::doGameEnd()
     m_bIsRunning = false;
     emit isRunningChanged();
     emit reviewChanged();
+    m_pBoardModel->clearHint();
+    emit hintChanged();
     scheduleGameReview();
 }
 
@@ -1388,7 +1400,7 @@ QString GamePlay::importWordList(const QString dictionaryFile, const QString wor
     return report;
 }
 
-int GamePlay::chooseComputerMove()
+int GamePlay::chooseComputerMove(int level)
 {
     const int n = m_nComputeResults;
     if (n <= 0)
@@ -1428,7 +1440,7 @@ int GamePlay::chooseComputerMove()
         scores.append(score);
         equities.append(computelevel::equity(score, kept, bBagEmpty));
     }
-    const int index = computelevel::pickMove(static_cast<computelevel::Level>(m_nComputerLevel),
+    const int index = computelevel::pickMove(static_cast<computelevel::Level>(level < 0 ? m_nComputerLevel : level),
                                              scores, equities, *QRandomGenerator::global());
     return (index < 0) ? 0 : index;
 }

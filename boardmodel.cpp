@@ -39,6 +39,26 @@ void boardmodel::updateAllSquares()
      }
 }
 
+void boardmodel::setHint(const QList<Point3D> &squares)
+{
+    const QSet<int> before = m_hint;
+    m_hint.clear();
+    for (const Point3D &p : squares)
+        m_hint.insert(m_pBoard->index2D(p));
+    for (int i : before + m_hint)
+        emit dataChanged(index(i), index(i), {IsHintRole});
+}
+
+void boardmodel::clearHint()
+{
+    if (m_hint.isEmpty())
+        return;
+    const QSet<int> before = m_hint;
+    m_hint.clear();
+    for (int i : before)
+        emit dataChanged(index(i), index(i), {IsHintRole});
+}
+
 QHash<int, QByteArray> boardmodel::roleNames() const
 {
     QHash<int, QByteArray> roles;
@@ -54,6 +74,7 @@ QHash<int, QByteArray> boardmodel::roleNames() const
     roles[BonusBottomRole] = "bonusbottom";
     roles[BonusLeftRole] = "bonusleft";
     roles[BonusRightRole] = "bonusright";
+    roles[IsHintRole] = "isHint";
     return roles;
 }
 
@@ -76,6 +97,7 @@ QVariant boardmodel::data(const QModelIndex &index, int role) const
       case IsJokerRole:   return aLetter.IsJoker; break;
       case IsRandomRole:  return aLetter.IsRandom; break;
       case FieldTypeRole: return (m_pBoard->getFieldtype(z)); break;
+      case IsHintRole:    return m_hint.contains(index.row()); break;
       case BonusTopRole ... BonusRightRole:
       {
         int x = -1;

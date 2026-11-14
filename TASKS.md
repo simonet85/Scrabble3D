@@ -10,11 +10,15 @@
   tours (sans rien afficher, sans indice possible). À la fin de la partie, le bilan compare vos coups aux meilleurs :
   points marqués / possibles, coups parfaits, trois plus grosses pertes, puis un commentaire du coach (si une clé est
   configurée). Onglet Coach, menu Partie > Bilan de partie. Option pour couper l'enregistrement.
-- [ ] 2. Bouton « Indice » : meilleure place pour votre mot, sans IA, avec un nombre d'indices limité par partie.
+- [x] **2. Bouton « Indice »** (sans IA). Le premier indice d'un tour montre où un bon coup peut être joué (points, nombre
+  de tuiles, case de départ surlignée en jaune, sens) ; un deuxième au même tour montre le mot et surligne toutes ses
+  cases. Aucun coup n'est joué ni conservé (pas de liste de mots). 3 indices par partie, réglable de 0 à 20
+  (Configuration > Règles). Bouton à côté du chevalet et menu Partie > Indice ; désactivé en réseau, au tour de
+  l'ordinateur et en 3D. Le bilan de partie indique les indices utilisés.
 - [x] **3. Réglage du son** : case « Son lors d'un Scrabble », volume (jingle généré en mémoire, donc vrai réglage de
   volume), bouton Tester. Page Configuration > Plateau.
 - [ ] 4. Défense au niveau Maître : éviter d'offrir des cases « mot compte triple » à l'adversaire.
-- [x] **5. Messages en français** : tous les textes ajoutés au jeu (85) ont une traduction française intégrée, qui
+- [x] **5. Messages en français** : tous les textes ajoutés au jeu (99) ont une traduction française intégrée, qui
   complète la traduction téléchargée sans la remplacer (`frenchsupplement`).
 
 ### Règlement FISF 2026 (restant)

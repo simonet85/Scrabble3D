@@ -48,6 +48,9 @@ class GamePlay : public QObject
     Q_PROPERTY(cubemodel* cubeModel READ cubeModel CONSTANT)
     Q_PROPERTY(rackmodel* rackModel READ rackModel CONSTANT)
     Q_PROPERTY(msgmodel* msgModel READ msgModel CONSTANT)
+    Q_PROPERTY(int hintsLeft READ hintsLeft NOTIFY hintChanged)
+    Q_PROPERTY(bool hintAvailable READ hintAvailable NOTIFY hintChanged)
+    Q_PROPERTY(int hintsPerGame READ hintsPerGame WRITE setHintsPerGame NOTIFY hintChanged)
     Q_PROPERTY(bool reviewRecording READ reviewRecording WRITE setReviewRecording NOTIFY reviewChanged)
     Q_PROPERTY(bool reviewAvailable READ reviewAvailable NOTIFY reviewChanged)
     Q_PROPERTY(bool soundEnabled READ soundEnabled WRITE setSoundEnabled NOTIFY soundChanged)
@@ -99,6 +102,7 @@ signals:
     void coachAutoAdviceChanged();
     void soundChanged();
     void reviewChanged();
+    void hintChanged();
     void coachServiceChanged();
     void isRunningChanged();
     void isComputingChanged();
@@ -186,6 +190,12 @@ public:
     void setReviewRecording(bool on);
     bool reviewAvailable();
     Q_INVOKABLE void gameReview();
+    // hint: shows where a good move can be played without playing it (first hint of a turn: the place; second: the word)
+    Q_INVOKABLE void hint();
+    int hintsPerGame();
+    void setHintsPerGame(int count);
+    int hintsLeft();
+    bool hintAvailable();
     bool soundEnabled();
     void setSoundEnabled(bool on);
     int soundVolume();
@@ -386,7 +396,19 @@ private:
     void coachAdviceWhenFree(const int turn, const int attempt);
     QString coachBoardText();
     int m_nComputerLevel = 3;                 // computelevel::Level of the computer player (3 = Master)
-    int chooseComputerMove();                 // index (0-based) of the move to play among the computed ones, -1 if none
+    int chooseComputerMove(int level = -1);   // index (0-based) of the move to play among the computed ones, -1 if none; level -1 = the level of the computer
+    int m_nHintsUsed = 0;                     // hints used in this game
+    int m_nHintTurn = -1;                     // turn of the last hint
+    int m_nHintLevel = 0;                     // 1 = place shown, 2 = word shown
+    struct HintMove {                         // the move shown by the hints of the current turn
+        QString word;
+        int value = 0;
+        int tiles = 0;
+        bool vertical = false;
+        QString where;                        // first tile, e.g. "H4"
+        QList<Point3D> squares;
+    };
+    HintMove m_hintMove;
     int m_nCheckedWords = 0;                  // number of words of the last doCheckWords()
     int m_nUnknownWords = 0;                  // number of those words not accepted
     int scrabbleBonusFor(const int nPlaced) const;

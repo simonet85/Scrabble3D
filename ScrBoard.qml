@@ -86,8 +86,10 @@ Item {
             bonusCaption: bonusCaptions[fieldtype] ?? ""
             pieceIsStart: fieldtype === 0
             // white grid lines between the squares, like a printed board
-            border.color: isEmpty ? "#eef5ee" : Qt.darker(color, 1.15)
-            border.width: Math.max(1, Math.round(fieldSize * 0.035))
+            // a hint highlights the squares of the move it shows with a thick yellow frame
+            border.color: isHint ? "#ffcc00" : isEmpty ? "#eef5ee" : Qt.darker(color, 1.15)
+            border.width: isHint ? Math.max(3, Math.round(fieldSize * 0.12)) : Math.max(1, Math.round(fieldSize * 0.035))
+            z: isHint ? 1 : 0
             pieceShadow: (isPlaced && config.bColoredPlayers)
                          ? config.playercolors.get(who).itemColor //colored shadow to show who placed a piece
                          : "transparent"
@@ -381,6 +383,17 @@ Item {
         }
         RackButton { act: acShuffleRack }
         RackButton { act: acRecallPieces }
+        Button {
+            id: btnHint
+            action: acHint
+            text: qsTr("Hint (%1)").arg(GamePlay.hintsLeft)
+            Layout.preferredHeight: fieldSize
+            ToolTip.visible: hovered
+            ToolTip.delay: 500
+            ToolTip.text: GamePlay.hintsLeft > 0
+                          ? qsTr("Shows where a good move can be played, without playing it. A second hint in the same turn shows the word. Hints left in this game: %1.").arg(GamePlay.hintsLeft)
+                          : qsTr("No hint left in this game.")
+        }
         Button {
             action: acPassMove
             Layout.preferredHeight: fieldSize
