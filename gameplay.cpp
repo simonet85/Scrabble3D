@@ -468,6 +468,7 @@ void GamePlay::startNewGame(QVariantMap gameConfig)
     m_bIsInitialized = true;
     m_bIsFirstMove = true;
     m_nPasses = 0;
+    m_outOfTimeTold.clear();
     m_nPerformance = gameConfig["Performance"].isNull() ? 0 : gameConfig["Performance"].toUInt() + 1;
     m_pMoves.clear();
     m_pMoves.append(sharedMove(new move(m_bIsFirstMove, m_pBoard)));
@@ -745,7 +746,9 @@ void GamePlay::doGameEnd()
         }
     }
 
-    if (m_bAdd) {
+    // rules 5.1.1 to 5.1.4: only the player who emptied the rack receives the values left on the other racks;
+    // a game ended by passes (or out of time) only subtracts
+    if (m_bAdd && m_pRackModel->isRackEmpty() && (nAdd > 0)) {
         m_pGameCourseModel->addBonus(m_nCurrentPlayer, nAdd);
         m_pMsgModel->addMessage(tr("%1: %2 plus %3 points")
                                     .arg(m_lPlayerNames[m_nCurrentPlayer])
@@ -865,6 +868,10 @@ bool GamePlay::doCheckWords(const bool bPrevious)
 void GamePlay::doStartTimer(const bool doRun)
 {
     m_nMoveTime = 0;
+    if (doRun && (m_nTimerID > -1)) { // only one clock: a second timer would count the time twice
+        killTimer(m_nTimerID);
+        m_nTimerID = -1;
+    }
     if (m_eTimeControlType == tcNoLimit)
         m_nTimeLeft = 0;
     else if (m_eTimeControlType == tcPerMove)
@@ -873,11 +880,55 @@ void GamePlay::doStartTimer(const bool doRun)
         m_nTimeLeft = m_nTimeControlValue - m_pGameCourseModel->timeTotalPerPlayer(m_nCurrentPlayer);
 
     if (doRun) { //do not run when loading
-        if ((m_eTimeControlType != tcNoLimit) && (m_nTimeLeft == 0))
-            nextPlayer();
-        else
+        if ((m_eTimeControlType != tcNoLimit) && (m_nTimeLeft <= 0)) {
+            if ((m_eTimeControlType == tcPerGame) && !m_outOfTimeTold.contains(int(m_nCurrentPlayer))) {
+                m_outOfTimeTold.insert(int(m_nCurrentPlayer));
+                m_pMsgModel->addMessage(tr("%1 is out of time and passes from now on, but may still challenge. "
+                                           "The other players can no longer exchange tiles.")
+                                            .arg(m_lPlayerNames[m_nCurrentPlayer]));
+                emit exchangeCountChanged(); // canExchange has changed
+            }
+            // rule 5.1.3: the player out of time may still challenge the last move before passing
+            // (locally the challenge period is already open here; in network games it opens right after this call)
+            const bool lastWasWord = (m_pMoves.count() > 1) && !m_pMoves[m_pMoves.count() - 2]->PlacedWord.isEmpty();
+            const bool challengePeriod = m_bIsChallenge || (m_bIsConnected && (m_eWordCheckMode == wcChallenge) && lastWasWord);
+            if (challengePeriod && (m_nWordCheckPeriod > 0)) {
+                const int nMove = int(m_nCurrentMove);
+                QTimer::singleShot(m_nWordCheckPeriod * 1000 + 200, this, [this, nMove] { autoPassOutOfTime(nMove); });
+            } else
+                nextPlayer();
+        } else
             m_nTimerID = startTimer(1000);
     }
+}
+
+void GamePlay::autoPassOutOfTime(int nMove)
+{
+    // still the same turn of a running game, after the challenge period
+    if (!m_bIsRunning || (int(m_nCurrentMove) != nMove) || m_bIsChallenge)
+        return;
+    if (!playerOutOfTime(int(m_nCurrentPlayer)))
+        return;
+    resetPieces();
+    nextPlayer();
+}
+
+bool GamePlay::playerOutOfTime(int nPlayer)
+{
+    if ((m_eTimeControlType != tcPerGame) || (nPlayer < 0) || (nPlayer >= int(m_nPlayerCount)))
+        return false;
+    return int(m_nTimeControlValue) - m_pGameCourseModel->timeTotalPerPlayer(uint(nPlayer)) <= 0;
+}
+
+bool GamePlay::getCanExchange()
+{
+    if (m_lBag.count() < m_pRackModel->rackSize())
+        return false;
+    if (m_bIsRunning && (m_eTimeControlType == tcPerGame))
+        for (int p = 0; p < int(m_nPlayerCount); p++)
+            if ((p != int(m_nCurrentPlayer)) && playerOutOfTime(p))
+                return false;
+    return true;
 }
 
 bool GamePlay::canDrop(const unsigned int boardIndex)
@@ -917,6 +968,11 @@ void GamePlay::exchangeLetter(const unsigned int rackIndex)
                 emit lastErrorChanged();
                 return;
             }
+        if (!getCanExchange()) {
+            m_pMoves.last()->setLastError(tr("No tile exchange possible: an opponent is out of time."));
+            emit lastErrorChanged();
+            return;
+        }
     }
     //do toggle
     m_pRackModel->toggleExchangeFlag(rackIndex);
@@ -979,6 +1035,10 @@ void GamePlay::rollbackLastMove()
 
 void GamePlay::timerEvent(QTimerEvent *event)
 {
+    if (event->timerId() != m_nTimerID) { // a timer that is no longer the clock of the current move
+        killTimer(event->timerId());
+        return;
+    }
     if ((m_eTimeControlType == tcPerGame) && //time control per game
         (m_nMoveTime >= m_nTimeLeft) &&      //no time left
         (m_nTimePenaltyCount[m_nCurrentPlayer] > 0) && //buying time is possible
@@ -996,7 +1056,11 @@ void GamePlay::timerEvent(QTimerEvent *event)
     }
 
     if ( m_pRackModel->isLocalIsActive() && IsTimePerMoveOver() )
+    {
+        if (m_eTimeControlType == tcPerGame)
+            resetPieces(); // rule 4.5: the clock decides, tiles placed when time runs out do not count
         nextPlayer();
+    }
 
     // in network games with wordcheckmode takeback a player may show the
     // confirmation dialog which halts the timer for this player;
@@ -1365,8 +1429,7 @@ void GamePlay::computeMove()
 void GamePlay::doComputeMove()
 {
     computeMove();
-    if ((m_nComputeResults == 0) &&
-        (m_lBag.count() >= m_pRackModel->rackSize()))
+    if ((m_nComputeResults == 0) && getCanExchange())
         m_pComputeMove->markLettersForExchange(m_pRackModel);
     else
         placeBestMove(chooseComputerMove() + 1);
@@ -1918,7 +1981,7 @@ void GamePlay::loadGame(QString fileName, const bool bSilent)
     emit isComputingChanged();
     emit statTotalChanged();
 
-    if ((m_eTimeControlType != tcNoLimit) && (m_nTimeLeft == 0))
+    if ((m_eTimeControlType != tcNoLimit) && (m_nTimeLeft <= 0))
         nextPlayer();
     else
         m_nTimerID = startTimer(1000);
