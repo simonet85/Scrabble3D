@@ -228,6 +228,29 @@ ApplicationWindow {
         }
     }
     Action {
+        id: acImportWords
+        text: qsTr("Import word list...")
+        enabled: !GamePlay.isConnected
+        onTriggered: importWordsDialog.open()
+    }
+    Action {
+        id: acCoachExplain
+        text: qsTr("Coach: explain the best moves")
+        enabled: GamePlay.isRunning && !GamePlay.isConnected && !GamePlay.isComputing
+        onTriggered: { main.showCoach(); GamePlay.coachExplain() }
+    }
+    Action {
+        id: acCoachDefine
+        text: qsTr("Coach: define the last words")
+        enabled: GamePlay.isRunning && !GamePlay.isConnected
+        onTriggered: { main.showCoach(); GamePlay.coachDefine() }
+    }
+    Action {
+        id: acCoachConfig
+        text: qsTr("AI coach...")
+        onTriggered: coachDialog.open()
+    }
+    Action {
         id: acResign
         text: qsTr("Resign")
         // the properties make the binding re-evaluate; canResign() alone has no change signal
@@ -283,10 +306,21 @@ ApplicationWindow {
                         ? doLoad(file)
                         : GamePlay.saveGame(file)}
 
+    FileDialog {
+        id: importWordsDialog
+        title: qsTr("Import a word list into the dictionary")
+        folder: StandardPaths.writableLocation(StandardPaths.DocumentsLocation)
+        nameFilters: [qsTr("Word lists (*.txt *.csv *.lst)"), qsTr("All files (*)")]
+        fileMode: FileDialog.OpenFile
+        onAccepted: GamePlay.importWordList(config.dictionaryFile, file,
+                                            config.getConfigData(false)["categories"] ?? "")
+    }
+
     ScrDefaults    { id: defaults }
     ScrNewGame     { id: newgame }
     ScrWordSearch  { id: dictionary }
     ScrNetwork     { id: network }
+    ScrCoach       { id: coachDialog }
     ScrAbout       { id: about }
     ScrRemoteGames { id: remotegames}
     ScrConfig      { id: config } //needs to come last trigger system palette change

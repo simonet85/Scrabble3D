@@ -265,7 +265,7 @@ Dialog {
         gameConfig["RandomSequence"] = cbRandomized.checked // -1 = generate
         gameConfig["DrawFirst"] = cbDrawFirst.checked // FISF 2.1
         gameConfig["Seed"] = seed
-        gameConfig["Performance"] = config.performance
+        gameConfig["ComputerLevel"] = config.computerLevel
 
         if (!GamePlay.isConnected)
             GamePlay.startNewGame(gameConfig)

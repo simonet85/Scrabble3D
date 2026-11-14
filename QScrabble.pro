@@ -12,12 +12,17 @@ SOURCES += \
         board.cpp \
         boardmodel.cpp \
         computemove.cpp \
+        coach.cpp \
+        coachmodel.cpp \
+        computelevel.cpp \
         cubemodel.cpp \
         dictionary.cpp \
+        dicimport.cpp \
         dictionarymodel.cpp \
         downloadmanager.cpp \
         gamecoursemodel.cpp \
         gameplay_network.cpp \
+        gameplay_coach.cpp \
         locmodel.cpp \
         move.cpp \
         main.cpp \
@@ -26,6 +31,7 @@ SOURCES += \
         network.cpp \
         playersmodel.cpp \
         rackmodel.cpp \
+        sound.cpp \
         remotegamesmodel.cpp \
         zip.c
 
@@ -33,9 +39,14 @@ HEADERS += \
         board.h \
         boardmodel.h \
         computemove.h \
+        coach.h \
+        coachmodel.h \
+        serveraddress.h \
+        computelevel.h \
         configpath.h \
         cubemodel.h \
         dictionary.h \
+        dicimport.h \
         dictionarymodel.h \
         downloadmanager.h \
         gamecoursemodel.h \
@@ -47,6 +58,7 @@ HEADERS += \
         network.h \
         playersmodel.h \
         rackmodel.h \
+        sound.h \
         remotegamesmodel.h \
         version.h \
         zip.h

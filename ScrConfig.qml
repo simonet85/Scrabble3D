@@ -34,7 +34,7 @@ Window {
     property int jokerPenalty: 0 // ConfigRules::sbJokerPanelty
     property bool changeIsPass: false // ConfigRules::cbChangeIsPass
     property bool cambiosecco: false // ConfigRules::cbCambioSecco
-    property int performance: 0 // ConfigRules::slPerformance
+    property int computerLevel: 3 // ConfigRules::cbLevel: 0 = Beginner ... 3 = Master
 
     property int wordCheckMode: 0 // ConfigWordCheck::rbTakeback = 0, rbPoll = 1, rbChallenge = 2
     property int wordCheckPeriod: 10 // ConfigWordCheck::sbPeriod.value
@@ -57,6 +57,7 @@ Window {
     property string boardName: configBoard.boardName
     property string lettersetName: configLetter.getLetterSetName()
     property string dictionaryName: configDictionary.dictionaryName
+    property string dictionaryFile: configDictionary.dictionaryFile
     Component.onCompleted: {
         //fill color names with random color values and reset later to the default
         var cNames = [qsTr("Start"), qsTr("Default"), qsTr("2x letter"), qsTr(
@@ -140,7 +141,7 @@ Window {
         configData["cbSubtractLetters"] = configRules.cbSubtractLetters.checked
         configData["cbChangeIsPass"] = configRules.cbChangeIsPass.checked
         configData["cbCambioSecco"] = configRules.cbCambioSecco.checked
-        configData["slPerformance"] = configRules.slPerformance.value
+        configData["cbLevel"] = configRules.cbLevel.currentIndex
 
         //dictionary
         configData["dictionary"] = configDictionary.dictionaryFile
@@ -270,7 +271,7 @@ Window {
                                                             "false") === "true"
         configRules.cbCambioSecco.checked = getConfigValue("cbCambioSecco",
                                                            "false") === "true"
-        configRules.slPerformance.value = getConfigValue("slPerformance", 10)
+        configRules.cbLevel.currentIndex = Number(configData["cbLevel"] ?? 3)
 
         // dictionary
         var aFileName = getConfigValue("dictionary", "francais.dic") //French by default

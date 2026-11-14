@@ -29,7 +29,7 @@ GridLayout {
     property alias sbJokerPenalty: sbJokerPenalty
     property alias cbChangeIsPass: cbChangeIsPass
     property alias cbCambioSecco: cbCambioSecco
-    property alias slPerformance: slPerformance
+    property alias cbLevel: cbLevel
 
     ColorLabel {
         id: lbPasses
@@ -162,27 +162,20 @@ GridLayout {
     ColorLabel {
         Layout.leftMargin: 8
         Layout.topMargin: 16
-        text: qsTr("Computer performance:")
+        text: qsTr("Computer level:")
     }
     RowLayout {
         Layout.columnSpan: 2
         Layout.leftMargin: 16
-        Slider {
-            id: slPerformance
-            from: 0
-            to: 10
-            value: 10
-            stepSize: 1
-            snapMode: Slider.SnapAlways
-            onValueChanged: {
-                config.performance = 10 - value
-                slLabel.text = 100 - config.performance * 5 + " %"
-            }
+        ColorComboBox {
+            id: cbLevel
+            Layout.minimumWidth: 160
+            model: [qsTr("Beginner"), qsTr("Intermediate"), qsTr("Advanced"), qsTr("Master")]
+            currentIndex: 3
+            onCurrentIndexChanged: config.computerLevel = currentIndex
         }
-        ColorLabel {
-            id: slLabel
-            text: "100 %"
+        InfoTip {
+            tiptext: qsTr("Beginner: plays ordinary moves\nIntermediate: plays one of the best moves\nAdvanced: also thinks about the pieces it keeps\nMaster: best balance between points and the pieces kept")
         }
-        InfoTip { tiptext: qsTr("Constrains the computing performance by picking a random result out of the best moves") }
     }
 }

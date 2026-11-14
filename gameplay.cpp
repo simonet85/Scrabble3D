@@ -1,5 +1,8 @@
 #include "gameplay.h"
 #include "configpath.h"
+#include "sound.h"
+#include "computelevel.h"
+#include "dicimport.h"
 
 #include <QMessageBox>
 #include <QSettings>
@@ -19,6 +22,7 @@ GamePlay::GamePlay(QQmlEngine *engine)
     m_pCubeModel = new cubemodel(this, m_pBoard);
     m_pMsgModel = new msgmodel(this);
     m_pGameCourseModel = new gamecoursemodel(this);
+    m_pCoachModel = new coachmodel(this);
     QObject::connect(m_pGameCourseModel, SIGNAL(onSelectedMoveChanged(int)),
                      this, SLOT(doSelectedMoveChanged(int)));
 
@@ -329,6 +333,8 @@ void GamePlay::resign()
 
 void GamePlay::startNewGame(QVariantMap gameConfig)
 {
+    if (!gameConfig["IsLoading"].toBool())
+        m_pCoachModel->clear();
     doSelectedMoveChanged(-1);
     m_lPlayerNames.clear();
     emit numberOfPlayersChanged(); //refreh names in case the number is equal
@@ -431,6 +437,7 @@ void GamePlay::startNewGame(QVariantMap gameConfig)
     m_nScrabbleBonus = gameConfig["ScrabbleBonus"].toInt();
     m_nScrabbleExtraBonus = gameConfig["ScrabbleExtraBonus"].toInt();
     m_bWordCheckPerWord = gameConfig["WordCheckPerWord"].toBool();
+    m_nComputerLevel = gameConfig["ComputerLevel"].isNull() ? 3 : qBound(0, gameConfig["ComputerLevel"].toInt(), 3);
     m_eWordCheckMode = static_cast<WordCheckMode>(gameConfig["WordCheckType"].toInt());
     m_nWordCheckPeriod = gameConfig["WordCheckPeriod"].toInt();
     m_nWordCheckPenalty = gameConfig["WordCheckPenalty"].toInt();
@@ -483,6 +490,8 @@ void GamePlay::startNewGame(QVariantMap gameConfig)
         QCoreApplication::processEvents(QEventLoop::AllEvents);
         doComputeMove();
     }
+    else if (!gameConfig["IsLoading"].toBool())
+        scheduleCoachAdvice(); // automatic advice for a human who opens the game
 }
 
 void GamePlay::nextPlayer(const bool bIsLoading)
@@ -539,6 +548,8 @@ void GamePlay::nextPlayer(const bool bIsLoading)
                                          m_pMoves.last()->PlacedWord,
                                          QString::number(scrabbleBonusFor(m_pMoves.last()->letterCount()))),
                                 m_lPlayerNames.at(m_nCurrentPlayer));
+    if ((!bIsLoading) && m_pMoves.last()->isScrabble())
+        playScrabbleSound();
 
     // increase number of passes
     const int nExchange = m_pRackModel->exchangeNumber();
@@ -664,6 +675,8 @@ void GamePlay::nextPlayer(const bool bIsLoading)
         QCoreApplication::processEvents(QEventLoop::AllEvents);
         doComputeMove();
     }
+    else if (!bIsLoading)
+        scheduleCoachAdvice(); // automatic advice at the start of the turn of a human
 }
 
 void GamePlay::doGameEnd()
@@ -1320,11 +1333,80 @@ void GamePlay::doComputeMove()
         (m_lBag.count() >= m_pRackModel->rackSize()))
         m_pComputeMove->markLettersForExchange(m_pRackModel);
     else
-    {
-        int nMove = QRandomGenerator::global()->bounded(m_nPerformance);
-        placeBestMove(nMove + 1);
-    }
+        placeBestMove(chooseComputerMove() + 1);
     nextPlayer();
+}
+
+QString GamePlay::importWordList(const QString dictionaryFile, const QString wordListUrl, const QString categories)
+{
+    if (dictionaryFile.isEmpty())
+        return tr("No dictionary is selected.");
+#ifdef Q_OS_ANDROID
+    const QString listPath = wordListUrl;
+#else
+    const QString listPath = QUrl(wordListUrl).isLocalFile() ? QUrl(wordListUrl).toLocalFile() : wordListUrl;
+#endif
+    const dicimport::Result r = dicimport::importWordList(config::file(dictionaryFile), listPath);
+    QString report;
+    if (!r.ok)
+        report = tr("Import failed: %1").arg(r.error);
+    else if (r.added == 0)
+        report = tr("Import finished: no new word (%1 already known, %2 lines ignored).")
+                     .arg(r.alreadyKnown).arg(r.rejected);
+    else
+        //: %1 = dictionary file, %2 = added words, %3 = already known, %4 = ignored lines, %5 = total, %6 = backup file
+        report = tr("Dictionary %1: %2 words added (%3 already known, %4 lines ignored), %5 words in total. Previous version saved as %6.")
+                     .arg(dictionaryFile).arg(r.added).arg(r.alreadyKnown).arg(r.rejected).arg(r.total)
+                     .arg(QFileInfo(r.backupPath).fileName());
+    m_pMsgModel->addMessage(report);
+    if (r.ok && r.added > 0)
+        m_pDictionary->loadDictionary(dictionaryFile, categories);
+    return report;
+}
+
+int GamePlay::chooseComputerMove()
+{
+    const int n = m_nComputeResults;
+    if (n <= 0)
+        return -1;
+
+    // pieces on the rack of the computer, to find out what it keeps after each move
+    const int nRack = m_pRackModel->rackSize();
+    QList<computelevel::KeptPiece> rack;
+    for (int i = 0; i < nRack; i++) {
+        const Letter l = m_pRackModel->getLetter(i);
+        computelevel::KeptPiece piece;
+        piece.what = l.What;
+        piece.isJoker = l.IsJoker;
+        piece.value = l.Value;
+        rack.append(piece);
+    }
+    // the bag is empty after the draw when this move cannot be followed by new pieces
+    const bool bBagEmpty = m_lBag.isEmpty();
+
+    QVector<int> scores;
+    QVector<double> equities;
+    scores.reserve(n);
+    equities.reserve(n);
+    for (int i = 0; i < n; i++) {
+        const sharedMove aMove = m_pComputeMove->result(i);
+        QList<bool> used(nRack, false);
+        for (int j = 0; j < aMove->letterCount(); j++) {
+            const int pos = aMove->getLetter(j).RackPos;
+            if (pos >= 0 && pos < nRack)
+                used[pos] = true;
+        }
+        QList<computelevel::KeptPiece> kept;
+        for (int k = 0; k < nRack; k++)
+            if (!used[k])
+                kept.append(rack[k]);
+        const int score = int(aMove->Value());
+        scores.append(score);
+        equities.append(computelevel::equity(score, kept, bBagEmpty));
+    }
+    const int index = computelevel::pickMove(static_cast<computelevel::Level>(m_nComputerLevel),
+                                             scores, equities, *QRandomGenerator::global());
+    return (index < 0) ? 0 : index;
 }
 
 void GamePlay::runDemo()
@@ -1457,6 +1539,7 @@ void GamePlay::saveGame(QString fileName, const bool bSilent)
         settings.setValue("ScrabbleBonus", m_nScrabbleBonus);
         settings.setValue("ScrabbleExtraBonus", m_nScrabbleExtraBonus);
         settings.setValue("WordCheckPerWord", m_bWordCheckPerWord);
+        settings.setValue("ComputerLevel", m_nComputerLevel);
         settings.setValue("CLABBERS", m_bIsCLABBERS);
         settings.setValue("IsRunning", m_bIsRunning);
     }
@@ -1598,6 +1681,7 @@ void GamePlay::loadGame(QString fileName, const bool bSilent)
         m_nScrabbleBonus = settings.value("ScrabbleBonus").toUInt();
         m_nScrabbleExtraBonus = settings.value("ScrabbleExtraBonus", 0).toInt();
         m_bWordCheckPerWord = settings.value("WordCheckPerWord", false).toBool();
+        m_nComputerLevel = qBound(0, settings.value("ComputerLevel", 3).toInt(), 3);
         m_bIsCLABBERS = settings.value("CLABBERS").toBool();
     }
     settings.endGroup();

@@ -1,10 +1,26 @@
 #include "gameplay.h"
 
+#include "serveraddress.h"
+
 #include <QMessageBox>
 #include <QCheckBox>
+#include <QLocale>
 
-void GamePlay::connect(QString name, QString password, QString email, QString country, QString city)
+QString GamePlay::systemCountry() const
 {
+    const QLocale locale = QLocale::system();
+    if (locale.territory() == QLocale::AnyTerritory)
+        return QString();
+    return QLocale::territoryToString(locale.territory()); // English name, as in the country list
+}
+
+void GamePlay::connect(QString name, QString password, QString email, QString country, QString city, QString server)
+{
+    const serveraddress::Address address = serveraddress::parse(server);
+    if (!address.valid) {
+        addMessage(tr("Invalid server address: %1").arg(server));
+        return;
+    }
     addMessage(tr("Connecting to game server..."));
 
     m_pNetwork = new network(this, name, password, email, country, city, m_pLocListModel->currentLang());
@@ -66,8 +82,7 @@ void GamePlay::connect(QString name, QString password, QString email, QString co
     QObject::connect(this, SIGNAL(onSend(network::MessageType,QString,QString)),
                      m_pNetwork, SLOT(doSend(network::MessageType,QString,QString)));
 
-    //TODO: network: make server variable
-    m_pNetwork->connect("scrabble3d.ignorelist.com",5001);
+    m_pNetwork->connect(address.host, address.port);
 
     m_bIsRunning = false; // cancel running game
     emit isRunningChanged();
