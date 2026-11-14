@@ -271,6 +271,12 @@ ApplicationWindow {
         onTriggered: GamePlay.resign()
     }
     Action {
+        id: acSanction
+        text: qsTr("Sanction...")
+        enabled: GamePlay.isRunning && !GamePlay.isConnected && GamePlay.numberOfPlayers >= 2
+        onTriggered: sanctionDialog.open()
+    }
+    Action {
         id: acDictionary
         text: qsTr("Word Search")
         enabled: !GamePlay.isConnected || !GamePlay.isRunning
@@ -333,6 +339,7 @@ ApplicationWindow {
     ScrWordSearch  { id: dictionary }
     ScrNetwork     { id: network }
     ScrCoach       { id: coachDialog }
+    ScrSanction    { id: sanctionDialog }
     ScrAbout       { id: about }
     ScrRemoteGames { id: remotegames}
     ScrConfig      { id: config } //needs to come last trigger system palette change

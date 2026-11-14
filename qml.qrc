@@ -298,6 +298,7 @@
         <file>resources/netw_disco.png</file>
         <file>ScrNetwork.qml</file>
         <file>ScrCoach.qml</file>
+        <file>ScrSanction.qml</file>
         <file>ScrCoachPanel.qml</file>
         <file>resources/group.png</file>
         <file>resources/dummy.png</file>

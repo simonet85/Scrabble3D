@@ -350,6 +350,9 @@ void GamePlay::startNewGame(QVariantMap gameConfig)
         m_turnBest.clear();
         m_nHintsUsed = 0;
         m_nHintTurn = -1;
+        m_nInfractions.clear();
+        m_lSanctions.clear();
+        emit sanctionsChanged();
         m_nHintLevel = 0;
         m_pBoardModel->clearHint();
         m_bReviewDone = false;

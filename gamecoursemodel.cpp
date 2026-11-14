@@ -173,8 +173,10 @@ void gamecoursemodel::addBonus(int player, int value)
 {
     beginResetModel();
     const int nLastMove = m_pData.count() - 1;
-    m_pData[nLastMove].bonuswho = player;
-    m_pData[nLastMove].bonus = value;
+    if (nLastMove >= 0) { // a sanction can be given before the first move
+        m_pData[nLastMove].bonuswho = player;
+        m_pData[nLastMove].bonus = value;
+    }
     m_Total[player] += value;
     endResetModel();
 }
