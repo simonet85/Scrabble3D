@@ -26,6 +26,7 @@ SOURCES += \
         network.cpp \
         playersmodel.cpp \
         rackmodel.cpp \
+        sound.cpp \
         remotegamesmodel.cpp \
         zip.c
 
@@ -47,6 +48,7 @@ HEADERS += \
         network.h \
         playersmodel.h \
         rackmodel.h \
+        sound.h \
         remotegamesmodel.h \
         version.h \
         zip.h

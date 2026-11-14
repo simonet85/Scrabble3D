@@ -1,5 +1,6 @@
 #include "gameplay.h"
 #include "configpath.h"
+#include "sound.h"
 
 #include <QMessageBox>
 #include <QSettings>
@@ -539,6 +540,8 @@ void GamePlay::nextPlayer(const bool bIsLoading)
                                          m_pMoves.last()->PlacedWord,
                                          QString::number(scrabbleBonusFor(m_pMoves.last()->letterCount()))),
                                 m_lPlayerNames.at(m_nCurrentPlayer));
+    if ((!bIsLoading) && m_pMoves.last()->isScrabble())
+        playScrabbleSound();
 
     // increase number of passes
     const int nExchange = m_pRackModel->exchangeNumber();
