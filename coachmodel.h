@@ -5,7 +5,7 @@
 #include <QList>
 
 // History of the interventions of the AI coach, shown in the "Coach" tab: what was asked, which
-// service answered, how long it took and what it said.
+// service answered, how long it took and what it said. The newest intervention is on top (row 0).
 class coachmodel : public QAbstractListModel
 {
     Q_OBJECT
@@ -31,9 +31,10 @@ public:
     QHash<int, QByteArray> roleNames() const override;
     int count() const { return int(m_entries.size()); }
 
+    // returns the id of the new entry (it stays valid whatever is added later)
     int addPending(const QString &service, const QString &model, const QString &kind, const QString &question);
-    void setDone(int row, const QString &answerHtml, int elapsedMs);
-    void setFailed(int row, const QString &message, int elapsedMs);
+    void setDone(int id, const QString &answerHtml, int elapsedMs);
+    void setFailed(int id, const QString &message, int elapsedMs);
     Q_INVOKABLE void clear();
 
 signals:
@@ -41,11 +42,14 @@ signals:
 
 private:
     struct Entry {
+        int id = 0;
         QDateTime when;
         QString service, model, kind, question, answer;
         int elapsed = -1;
         State state = Pending;
     };
+    int rowOfId(int id) const;
     void update(int row, const QList<int> &roles);
     QList<Entry> m_entries;
+    int m_nNextId = 1;
 };

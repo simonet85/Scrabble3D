@@ -9,8 +9,9 @@
 // The coach advises; the dictionary decides. This is said to the model and repeated in the code
 // below: nothing the coach answers is ever used to accept or refuse a word.
 static const char *coachSystem =
-    "Tu es un coach de Scrabble classique francophone. Reponds en francais, ton simple et amical, "
-    "6 lignes maximum, en texte brut sans mise en forme (ni gras, ni listes a puces, ni tableaux).\n"
+    "Tu es un coach de Scrabble classique francophone. Reponds en francais, en 2 ou 3 phrases courtes "
+    "(50 mots au maximum), une seule idee principale, texte brut sans mise en forme (ni gras, ni listes, ni tableaux). "
+    "Commence directement par le coup conseille ; pas de salutation, pas d'encouragement, pas de conclusion.\n"
     "Regles strictes :\n"
     "- Les scores des coups sont fournis par le moteur du jeu : reprends-les tels quels, ne refais aucun calcul de points.\n"
     "- Ne parle jamais des cases primes (lettre ou mot compte double ou triple) : tu ne les connais pas ; "
@@ -279,8 +280,8 @@ void GamePlay::coachExplainImpl(const bool automatic)
                                "et le joueur qui vide son chevalet termine la partie.\n");
     user += QStringLiteral("Scores : ") + scores + QStringLiteral("\n\nCoups calcules par le moteur (tuiles jouees et lettres gardees "
                            "sont calculees par le jeu, ne les deduis pas toi-meme) :\n") + moves
-         + QStringLiteral("Explique en quelques lignes pourquoi le COUP RECOMMANDE est un bon choix, en citant ses points et ses "
-                          "lettres gardees exactement comme indiques ci-dessus. Ne cite aucune autre lettre.");
+         + QStringLiteral("En 2 phrases courtes (50 mots au maximum), dis pourquoi le COUP RECOMMANDE est un bon choix, en citant "
+                          "ses points et ses lettres gardees exactement comme indiques ci-dessus. Ne cite aucune autre lettre.");
 
     coachBegin(automatic ? "auto" : "advice",
                tr("Rack %1 - %2 possible moves, recommended: %3 (%4 points)")
@@ -290,7 +291,7 @@ void GamePlay::coachExplainImpl(const bool automatic)
                    .arg(candidates[recommended].score));
     if (!automatic)
         addMessage(tr("The coach is thinking..."));
-    coachClient()->ask(QString::fromUtf8(coachSystem), user, 800, 0.3);
+    coachClient()->ask(QString::fromUtf8(coachSystem), user, 300, 0.3);
 }
 
 void GamePlay::coachDefine()
@@ -317,14 +318,14 @@ void GamePlay::coachDefine()
 
     const QString user = QString(
         "Mots joues au dernier coup : %1.\n"
-        "Pour chaque mot, donne en une phrase son sens dans la langue francaise courante et sa nature "
+        "Pour chaque mot, donne en une phrase de 12 mots au maximum son sens dans la langue francaise courante et sa nature "
         "(nom, verbe, interjection...). Pour un nom propre, une marque, un sigle ou un mot que tu ne connais "
         "pas avec certitude, reponds seulement 'je ne connais pas ce mot' : n'invente jamais un sens ni une "
         "origine. Reste neutre et sobre. Ne dis pas s'il est valide au Scrabble.").arg(words.join(", "));
 
     coachBegin("define", tr("Definitions of: %1").arg(words.join(", ")));
     addMessage(tr("The coach is thinking..."));
-    coachClient()->ask(QString::fromUtf8(coachSystem), user, 600, 0.2);
+    coachClient()->ask(QString::fromUtf8(coachSystem), user, 300, 0.2);
 }
 
 // called when a turn starts: advice for a human player when the automatic mode is on

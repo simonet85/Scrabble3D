@@ -81,8 +81,8 @@ Item {
             spacing: 6
             model: GamePlay.coachModel
             ScrollBar.vertical: ScrollBar { }
-            onCountChanged: Qt.callLater(positionViewAtEnd)
-            onHeightChanged: Qt.callLater(positionViewAtEnd)
+            // the newest intervention is on top: the view goes back to it when something is added
+            onCountChanged: Qt.callLater(positionViewAtBeginning)
 
             delegate: Rectangle {
                 id: card

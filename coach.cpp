@@ -188,6 +188,11 @@ QJsonObject coach::buildRequest(const QString &system, const QString &user, int 
         message["content"] = user;
         body["max_tokens"] = maxTokens;
         // no temperature: the recent Claude models refuse the parameter ("temperature is deprecated for this model")
+        // no "thinking": the recent models think first by default, and that thinking uses the tokens of a
+        // short answer (nothing is left for the text); without it the advice comes in 1-2 s
+        QJsonObject thinking;
+        thinking["type"] = "disabled";
+        body["thinking"] = thinking;
         body["system"] = system;
         body["messages"] = QJsonArray{message};
     } else if (provider() == QLatin1String(Gemini)) {

@@ -44,18 +44,26 @@ QHash<int, QByteArray> coachmodel::roleNames() const
 
 int coachmodel::addPending(const QString &service, const QString &model, const QString &kind, const QString &question)
 {
-    const int row = int(m_entries.size());
-    beginInsertRows(QModelIndex(), row, row);
+    beginInsertRows(QModelIndex(), 0, 0); // newest first
     Entry e;
+    e.id = m_nNextId++;
     e.when = QDateTime::currentDateTime();
     e.service = service;
     e.model = model;
     e.kind = kind;
     e.question = question;
-    m_entries.append(e);
+    m_entries.prepend(e);
     endInsertRows();
     emit countChanged();
-    return row;
+    return e.id;
+}
+
+int coachmodel::rowOfId(int id) const
+{
+    for (int r = 0; r < m_entries.size(); r++)
+        if (m_entries[r].id == id)
+            return r;
+    return -1;
 }
 
 void coachmodel::update(int row, const QList<int> &roles)
@@ -64,9 +72,10 @@ void coachmodel::update(int row, const QList<int> &roles)
     emit dataChanged(i, i, roles);
 }
 
-void coachmodel::setDone(int row, const QString &answerHtml, int elapsedMs)
+void coachmodel::setDone(int id, const QString &answerHtml, int elapsedMs)
 {
-    if (row < 0 || row >= m_entries.size())
+    const int row = rowOfId(id);
+    if (row < 0)
         return;
     m_entries[row].answer = answerHtml;
     m_entries[row].elapsed = elapsedMs;
@@ -74,9 +83,10 @@ void coachmodel::setDone(int row, const QString &answerHtml, int elapsedMs)
     update(row, {AnswerRole, ElapsedRole, StateRole});
 }
 
-void coachmodel::setFailed(int row, const QString &message, int elapsedMs)
+void coachmodel::setFailed(int id, const QString &message, int elapsedMs)
 {
-    if (row < 0 || row >= m_entries.size())
+    const int row = rowOfId(id);
+    if (row < 0)
         return;
     m_entries[row].answer = message.toHtmlEscaped();
     m_entries[row].elapsed = elapsedMs;
