@@ -69,6 +69,47 @@ double equity(int score, const QList<KeptPiece> &kept, bool bagIsEmpty)
     return score - remaining + (kept.isEmpty() ? 10 : 0);
 }
 
+static bool reachable(const BoardView &v, int x, int y)
+{
+    static const int dirs[4][2] = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}};
+    for (const auto &d : dirs)
+        for (int step = 1; step <= OpeningReach; step++) {
+            const int nx = x + d[0] * step, ny = y + d[1] * step;
+            if (nx < 0 || ny < 0 || nx >= v.size || ny >= v.size)
+                break;
+            if (v.occupied[ny * v.size + nx])
+                return true;
+        }
+    return false;
+}
+
+double openingPenalty(const BoardView &before, const QList<QPoint> &placed)
+{
+    const int n = before.size * before.size;
+    if (placed.isEmpty() || before.fieldType.size() < n || before.occupied.size() < n)
+        return 0;
+    BoardView after = before;
+    for (const QPoint &p : placed)
+        if (p.x() >= 0 && p.y() >= 0 && p.x() < before.size && p.y() < before.size)
+            after.occupied[p.y() * before.size + p.x()] = true;
+
+    double penalty = 0;
+    for (int y = 0; y < before.size; y++)
+        for (int x = 0; x < before.size; x++) {
+            const int i = y * before.size + x;
+            const int type = before.fieldType[i];
+            double worth = 0;
+            if (type == 6) worth = TripleWordOpening;
+            else if (type == 5) worth = DoubleWordOpening;
+            else if (type == 7) worth = QuadWordOpening;
+            if (worth == 0 || after.occupied[i])
+                continue; // not a premium word square, or covered by the move itself
+            if (reachable(after, x, y) && !reachable(before, x, y))
+                penalty += worth;
+        }
+    return penalty;
+}
+
 int pickMove(Level level, const QVector<int> &scores, const QVector<double> &equities, QRandomGenerator &rng)
 {
     const int n = int(scores.size());

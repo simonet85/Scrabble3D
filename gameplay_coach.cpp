@@ -14,8 +14,8 @@ static const char *coachSystem =
     "Commence directement par le coup conseille ; pas de salutation, pas d'encouragement, pas de conclusion.\n"
     "Regles strictes :\n"
     "- Les scores des coups sont fournis par le moteur du jeu : reprends-les tels quels, ne refais aucun calcul de points.\n"
-    "- Ne parle jamais des cases primes (lettre ou mot compte double ou triple) : tu ne les connais pas ; "
-    "parle seulement des points fournis, des lettres gardees et de l'ouverture du plateau.\n"
+    "- Les cases primes : parle seulement de ce que disent les donnees (\"ouvre a l'adversaire des cases mot compte "
+    "double ou triple\" ou \"n'ouvre aucune case\") ; n'invente jamais une case ni son emplacement.\n"
     "- Tu n'inventes rien : si une information n'est pas dans les donnees, ne l'affirme pas.\n"
     "- Les tuiles jouees et les lettres gardees de chaque coup sont fournies : reprends-les telles quelles, "
     "ne deduis jamais toi-meme les lettres qui restent et ne cite aucune lettre ou aucun mot absents des donnees.\n"
@@ -224,9 +224,11 @@ void GamePlay::coachExplainImpl(const bool automatic)
         int score = 0;
         QList<computelevel::KeptPiece> kept;
         double equity = 0;
+        double opening = 0; // points the move gives away by opening premium word squares
     };
     const bool bagEmpty = m_lBag.isEmpty();
     const int nCandidates = qMin(m_nComputeResults, 40);
+    const computelevel::BoardView view = m_bMasterDefense ? boardView() : computelevel::BoardView();
     QList<Candidate> candidates;
     QVector<int> scoreList;
     QVector<double> equityList;
@@ -244,7 +246,8 @@ void GamePlay::coachExplainImpl(const bool automatic)
         for (int k = 0; k < nRack; k++)
             if (onRack[k] && !used[k])
                 c.kept.append(rackPieces[k]);
-        c.equity = computelevel::equity(c.score, c.kept, bagEmpty);
+        c.opening = defensePenalty(aMove, view);
+        c.equity = computelevel::equity(c.score, c.kept, bagEmpty) - c.opening;
         candidates.append(c);
         scoreList.append(c.score);
         equityList.append(c.equity);
@@ -284,7 +287,11 @@ void GamePlay::coachExplainImpl(const bool automatic)
                  + QString::number(aMove->letterCount()) + QStringLiteral(" tuiles du chevalet jouees, premiere tuile posee en ")
                  + QChar('A' + first.Point.y()) + QString::number(first.Point.x() + 1)
                  + (aMove->activeDimension() == dmOrdinate ? QStringLiteral(" (vertical)") : QStringLiteral(" (horizontal)"))
-                 + QStringLiteral(" - lettres gardees : ") + keptText + QStringLiteral("\n");
+                 + QStringLiteral(" - lettres gardees : ") + keptText
+                 + (c.opening > 0 ? QStringLiteral(" - ouvre a l'adversaire des cases mot compte double ou triple (risque estime : ")
+                                        + QString::number(qRound(c.opening)) + QStringLiteral(" points)")
+                                  : QStringLiteral(" - n'ouvre aucune case mot compte double ou triple"))
+                 + QStringLiteral("\n");
     }
 
     QString user = QStringLiteral(

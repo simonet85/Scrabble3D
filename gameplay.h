@@ -23,6 +23,7 @@
 #include "locmodel.h"
 #include "coachmodel.h"
 #include "gamereview.h"
+#include "computelevel.h"
 #include <QMap>
 #include <QPair>
 #include <QElapsedTimer>
@@ -397,6 +398,9 @@ private:
     QString coachBoardText();
     int m_nComputerLevel = 3;                 // computelevel::Level of the computer player (3 = Master)
     int chooseComputerMove(int level = -1);   // index (0-based) of the move to play among the computed ones, -1 if none; level -1 = the level of the computer
+    bool m_bMasterDefense = true;             // the Master avoids opening premium word squares to the opponent
+    computelevel::BoardView boardView();      // the 2D board as seen by the defense (empty view for a 3D board)
+    double defensePenalty(const sharedMove &aMove, const computelevel::BoardView &view); // points the move gives away
     int m_nHintsUsed = 0;                     // hints used in this game
     int m_nHintTurn = -1;                     // turn of the last hint
     int m_nHintLevel = 0;                     // 1 = place shown, 2 = word shown

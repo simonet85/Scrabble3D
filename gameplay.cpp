@@ -1419,6 +1419,9 @@ int GamePlay::chooseComputerMove(int level)
     }
     // the bag is empty after the draw when this move cannot be followed by new pieces
     const bool bBagEmpty = m_lBag.isEmpty();
+    const computelevel::Level effective = static_cast<computelevel::Level>(level < 0 ? m_nComputerLevel : level);
+    const computelevel::BoardView view = (effective == computelevel::Master && m_bMasterDefense)
+                                             ? boardView() : computelevel::BoardView();
 
     QVector<int> scores;
     QVector<double> equities;
@@ -1438,11 +1441,44 @@ int GamePlay::chooseComputerMove(int level)
                 kept.append(rack[k]);
         const int score = int(aMove->Value());
         scores.append(score);
-        equities.append(computelevel::equity(score, kept, bBagEmpty));
+        double value = computelevel::equity(score, kept, bBagEmpty);
+        // the Master does not give premium word squares to the opponent for a few points
+        if (effective == computelevel::Master && m_bMasterDefense && !view.occupied.isEmpty())
+            value -= defensePenalty(aMove, view);
+        equities.append(value);
     }
-    const int index = computelevel::pickMove(static_cast<computelevel::Level>(level < 0 ? m_nComputerLevel : level),
-                                             scores, equities, *QRandomGenerator::global());
+    const int index = computelevel::pickMove(effective, scores, equities, *QRandomGenerator::global());
     return (index < 0) ? 0 : index;
+}
+
+computelevel::BoardView GamePlay::boardView()
+{
+    computelevel::BoardView view;
+    if (m_pBoard->is3D())
+        return view; // the defense only knows 2D boards: no penalty
+    const int size = m_pBoard->getBoardSize();
+    view.size = size;
+    view.fieldType.resize(size * size);
+    view.occupied.resize(size * size);
+    for (int y = 0; y < size; y++)
+        for (int x = 0; x < size; x++) {
+            const int where = m_pBoard->pointToWhere(Point3D(x, y, 0));
+            view.fieldType[y * size + x] = int(m_pBoard->getFieldtype(where));
+            view.occupied[y * size + x] = (m_pBoard->getLetter(where).State == LetterState::lsPlaced);
+        }
+    return view;
+}
+
+double GamePlay::defensePenalty(const sharedMove &aMove, const computelevel::BoardView &view)
+{
+    if (view.occupied.isEmpty())
+        return 0;
+    QList<QPoint> placed;
+    for (int j = 0; j < aMove->letterCount(); j++) {
+        const Point3D p = aMove->getLetter(j).Point;
+        placed.append(QPoint(p.x(), p.y()));
+    }
+    return computelevel::openingPenalty(view, placed);
 }
 
 void GamePlay::runDemo()
