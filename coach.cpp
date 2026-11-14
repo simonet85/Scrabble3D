@@ -8,10 +8,12 @@
 #include <QTimer>
 #include <QSettings>
 #include <QUrl>
+#include <QUuid>
 
 coach::coach(const QString &settingsPath, QObject *parent)
     : QObject(parent), m_sSettingsPath(settingsPath)
 {
+    m_sSession = "scrabble3d-" + QUuid::createUuid().toString(QUuid::WithoutBraces).toLatin1();
 }
 
 static QSettings openSettings(const QString &path)
@@ -21,7 +23,8 @@ static QSettings openSettings(const QString &path)
 
 bool coach::isKnownProvider(const QString &provider)
 {
-    return provider == QLatin1String(Groq) || provider == QLatin1String(Anthropic) || provider == QLatin1String(Gemini);
+    return provider == QLatin1String(Groq) || provider == QLatin1String(Anthropic) || provider == QLatin1String(Gemini)
+           || provider == QLatin1String(OpenCode);
 }
 
 QString coach::providerName(const QString &provider)
@@ -30,6 +33,8 @@ QString coach::providerName(const QString &provider)
         return QStringLiteral("Anthropic");
     if (provider == QLatin1String(Gemini))
         return QStringLiteral("Gemini");
+    if (provider == QLatin1String(OpenCode))
+        return QStringLiteral("OpenCode");
     return QStringLiteral("Groq");
 }
 
@@ -39,6 +44,8 @@ QString coach::defaultModel(const QString &provider)
         return QStringLiteral("claude-haiku-5-5");
     if (provider == QLatin1String(Gemini))
         return QStringLiteral("gemini-3.1-flash-lite"); // answers in 2-3 s; the "thinking" models need 20-40 s
+    if (provider == QLatin1String(OpenCode))
+        return QStringLiteral("deepseek-v4.1-flash-free"); // a free model of the Zen address
     return QStringLiteral("openai/gpt-oss-120b");
 }
 
@@ -48,6 +55,8 @@ QString coach::defaultBaseUrl(const QString &provider)
         return QStringLiteral("https://api.anthropic.com");
     if (provider == QLatin1String(Gemini))
         return QStringLiteral("https://generativelanguage.googleapis.com/v1beta");
+    if (provider == QLatin1String(OpenCode))
+        return QStringLiteral("https://opencode.ai/zen/v1"); // OpenCode Go: https://opencode.ai/zen/go/v1
     return QStringLiteral("https://api.groq.com/openai/v1");
 }
 
@@ -317,6 +326,8 @@ void coach::ask(const QString &system, const QString &user, int maxTokens, doubl
         request.setRawHeader("x-goog-api-key", apiKey.toUtf8());
     } else {
         request.setRawHeader("Authorization", "Bearer " + apiKey.toUtf8());
+        if (provider() == QLatin1String(OpenCode))
+            request.setRawHeader("x-opencode-session", m_sSession); // required by the Go address
     }
     request.setTransferTimeout(m_nTimeout);
 

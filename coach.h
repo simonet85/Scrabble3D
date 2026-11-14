@@ -6,7 +6,8 @@
 #include <QString>
 
 // Optional AI coach: sends a question about the game to an online AI service and returns the
-// answer. Three services are supported: Groq (OpenAI compatible API, default), Gemini (Google) and Anthropic.
+// answer. Four services are supported: Groq (OpenAI compatible API, default), Gemini (Google), Anthropic and
+// OpenCode (OpenAI compatible gateway to many models; Zen or Go address).
 // The coach only advises (explains moves, defines words); it never validates a word, the
 // dictionary does. The API key is stored in a settings file of the user and nowhere else.
 class coach : public QObject
@@ -16,6 +17,7 @@ public:
     static constexpr const char *Groq = "groq";
     static constexpr const char *Anthropic = "anthropic";
     static constexpr const char *Gemini = "gemini";
+    static constexpr const char *OpenCode = "opencode";
 
     // settingsPath: ini file holding provider, keys, models, base urls and consent
     explicit coach(const QString &settingsPath, QObject *parent = nullptr);
@@ -24,7 +26,7 @@ public:
     QString provider() const;
     void setProvider(const QString &provider);
     static bool isKnownProvider(const QString &provider);
-    static QString providerName(const QString &provider); // "Groq", "Gemini", "Anthropic"
+    static QString providerName(const QString &provider); // "Groq", "Gemini", "Anthropic", "OpenCode"
     static QString defaultModel(const QString &provider);
     static QString defaultBaseUrl(const QString &provider);
 
@@ -69,6 +71,7 @@ private:
     QString key(const QString &name, const QString &provider) const; // settings key of a provider
     void post(const QNetworkRequest &request, const QByteArray &payload, int attempt);
     int m_nRetryDelay = 2000;
+    QByteArray m_sSession; // identifies this run of the application for OpenCode (header x-opencode-session)
     int m_nTimeout = 45000;
     QString m_sSettingsPath;
     QNetworkAccessManager m_Network;

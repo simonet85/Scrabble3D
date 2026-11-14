@@ -13,7 +13,7 @@ Dialog {
     padding: 12
     width: Math.min(scrabble3D.width - 24, 460)
 
-    readonly property var providers: ["groq", "gemini", "anthropic"]
+    readonly property var providers: ["groq", "gemini", "anthropic", "opencode"]
     property bool hasKey: false
 
     function currentProvider() { return providers[provider.currentIndex] }
@@ -43,7 +43,7 @@ Dialog {
         ComboBox {
             id: provider
             Layout.fillWidth: true
-            model: ["Groq", "Gemini (Google)", "Anthropic"]
+            model: ["Groq", "Gemini (Google)", "Anthropic", "OpenCode"]
             onActivated: coachDialog.showProvider()
         }
         Label { text: qsTr("API key:") }
