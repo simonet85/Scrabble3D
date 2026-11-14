@@ -531,6 +531,15 @@ void GamePlay::nextPlayer(const bool bIsLoading)
                                          , QString::number(m_pMoves.last()->Value())) ,
                                 m_lPlayerNames.at(m_nCurrentPlayer));
 
+    // all pieces of the rack placed at once: announce the Scrabble (FISF 3.1.2c)
+    if ((!bIsLoading) && m_pMoves.last()->isScrabble())
+        //: %1 = player name, %2 = word, %3 = bonus points
+        m_pMsgModel->addMessage(tr("<b>SCRABBLE! %1 places all pieces with %2 and gets a bonus of %3 points.</b>")
+                                    .arg(m_lPlayerNames[m_nCurrentPlayer],
+                                         m_pMoves.last()->PlacedWord,
+                                         QString::number(scrabbleBonusFor(m_pMoves.last()->letterCount()))),
+                                m_lPlayerNames.at(m_nCurrentPlayer));
+
     // increase number of passes
     const int nExchange = m_pRackModel->exchangeNumber();
     bool isPass = m_pMoves.last()->PlacedWord.isEmpty();
