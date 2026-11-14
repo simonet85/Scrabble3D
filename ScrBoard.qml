@@ -72,12 +72,12 @@ Item {
             implicitHeight: fieldSize
 
             pieceColor: aWhat == String.fromCharCode(0) //empty?
-                        ? config.colors.get(fieldtype).itemColor //use field color when empty
+                        ? config.fieldColor(fieldtype) //use field color when empty
                         : isPlaced && config.bColoredPlayers && (aCurrentMove - when) <= GamePlay.numberOfPlayers
-                          ? Qt.lighter(config.playercolors.get(who).itemColor, 1.75) //use (lighter) player color for the last move, if set in config
+                          ? Qt.lighter(config.playerColor(who), 1.75) //use (lighter) player color for the last move, if set in config
                           : when === aCurrentMove
-                            ? config.colors.get(8).itemColor //use (yellow) field color for non-empty squares
-                            : Qt.lighter(config.colors.get(8).itemColor) // ... but a bit lighter when removing is not possible
+                            ? config.fieldColor(8) //use (yellow) field color for non-empty squares
+                            : Qt.lighter(config.fieldColor(8)) // ... but a bit lighter when removing is not possible
 
             pieceLabel: aWhat
             pieceValue: value
@@ -91,17 +91,17 @@ Item {
             border.width: isHint ? Math.max(3, Math.round(fieldSize * 0.12)) : Math.max(1, Math.round(fieldSize * 0.035))
             z: isHint ? 1 : 0
             pieceShadow: (isPlaced && config.bColoredPlayers)
-                         ? config.playercolors.get(who).itemColor //colored shadow to show who placed a piece
+                         ? config.playerColor(who) //colored shadow to show who placed a piece
                          : "transparent"
 
-            bonusTop:    config.bMarkers && (bonustop > 0)    ? config.colors.get(bonustop).itemColor   : "transparent"
-            bonusBottom: config.bMarkers && (bonusbottom > 0) ? config.colors.get(bonusbottom).itemColor : "transparent"
+            bonusTop:    config.bMarkers && (bonustop > 0)    ? config.fieldColor(bonustop)   : "transparent"
+            bonusBottom: config.bMarkers && (bonusbottom > 0) ? config.fieldColor(bonusbottom) : "transparent"
             bonusLeft: config.ltr
-                ? config.bMarkers && (bonusleft > 0) ? config.colors.get(bonusleft).itemColor  : "transparent"
-                : config.bMarkers && (bonusright > 0) ? config.colors.get(bonusright).itemColor : "transparent"
+                ? config.bMarkers && (bonusleft > 0) ? config.fieldColor(bonusleft)  : "transparent"
+                : config.bMarkers && (bonusright > 0) ? config.fieldColor(bonusright) : "transparent"
             bonusRight: config.ltr
-                ? config.bMarkers && (bonusright > 0) ? config.colors.get(bonusright).itemColor : "transparent"
-                : config.bMarkers && (bonusleft > 0) ? config.colors.get(bonusleft).itemColor  : "transparent"
+                ? config.bMarkers && (bonusright > 0) ? config.fieldColor(bonusright) : "transparent"
+                : config.bMarkers && (bonusleft > 0) ? config.fieldColor(bonusleft)  : "transparent"
 
             ToolTip {
                 id: tipMeaning
@@ -198,8 +198,8 @@ Item {
             height: fieldSize
             border.color: Qt.darker(color)
             pieceColor: (!GamePlay.isLocalPlayer) || isExchange
-                            ? config.colors.get(0).itemColor //start
-                            : config.colors.get(8).itemColor //piece
+                            ? config.fieldColor(0) //start
+                            : config.fieldColor(8) //piece
             visible: isVisible //LetterState::lsRack
             pieceLabel: what
             pieceValue: value

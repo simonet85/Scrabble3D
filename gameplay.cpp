@@ -91,6 +91,30 @@ void GamePlay::checkForUpdates()
     download("Binaries/raw/main/Scrabble3D.conf");
 }
 
+void GamePlay::checkForUpdatesNow()
+{
+    m_bManualUpdateCheck = true;
+    addMessage(tr("Looking for newer dictionaries and translations..."));
+    checkForUpdates();
+}
+
+// the words imported by the user are kept in <dictionary>.imported.txt: an update of the official
+// dictionary replaces the file, the imported words are merged again into the new edition
+int GamePlay::reapplyImportedWords(const QString &dictionaryFile)
+{
+    const QString sidecar = config::file(dictionaryFile + QStringLiteral(".imported.txt"));
+    if (dictionaryFile.isEmpty() || !QFileInfo::exists(sidecar) || !QFileInfo::exists(config::file(dictionaryFile)))
+        return -1;
+    const dicimport::Result r = dicimport::importWordList(config::file(dictionaryFile), sidecar);
+    if (!r.ok) {
+        m_pMsgModel->addMessage(tr("Your imported words could not be added again to %1: %2").arg(dictionaryFile, r.error));
+        return -1;
+    }
+    m_pMsgModel->addMessage(tr("Dictionary %1 updated: your imported words are kept (%2 added again, %3 now in the official list).")
+                                .arg(dictionaryFile).arg(r.added).arg(r.alreadyKnown));
+    return r.added;
+}
+
 void GamePlay::localize(const QString fileName)
 {
     QFileInfo finfo(config::file(fileName));
@@ -166,10 +190,14 @@ void GamePlay::doDownloadFinished(DlType fileType, QString fileName)
         canUpdate << m_pLocListModel->canUpdate()
                   << m_pDicListModel->canUpdate();
         canUpdate.removeAll({}); //clear empty entries
+        if (m_bManualUpdateCheck && canUpdate.isEmpty())
+            m_pMsgModel->addMessage(tr("Dictionaries and translations are up to date."));
+        m_bManualUpdateCheck = false;
         m_pDownloadManager->checkUpdates(canUpdate);
         break;
     }
     case DlType::dmDictionary: {
+        reapplyImportedWords(fileName); // before the list reads the new version
         m_pDicListModel->updateList();
         if (!fileName.isEmpty())
             loadDictionary(fileName, "");
@@ -1461,8 +1489,17 @@ QString GamePlay::importWordList(const QString dictionaryFile, const QString wor
                      .arg(dictionaryFile).arg(r.added).arg(r.alreadyKnown).arg(r.rejected).arg(r.total)
                      .arg(QFileInfo(r.backupPath).fileName());
     m_pMsgModel->addMessage(report);
-    if (r.ok && r.added > 0)
+    if (r.ok && r.added > 0) {
+        // kept aside, so that a later update of the dictionary does not lose them
+        QFile list(listPath), sidecar(config::file(dictionaryFile + QStringLiteral(".imported.txt")));
+        if (list.open(QIODevice::ReadOnly) && sidecar.open(QIODevice::WriteOnly | QIODevice::Append)) {
+            QByteArray data = list.readAll();
+            if (!data.endsWith('\n'))
+                data.append('\n');
+            sidecar.write(data);
+        }
         m_pDictionary->loadDictionary(dictionaryFile, categories);
+    }
     return report;
 }
 

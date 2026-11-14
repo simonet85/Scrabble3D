@@ -106,7 +106,7 @@ ColumnLayout {
                                     ? time
                                     : ""
                 shadowColor: who > -1 && config.bColoredPlayers //color the words according the player, if checked
-                             ? Qt.lighter(config.playercolors.get(who).itemColor)
+                             ? Qt.lighter(config.playerColor(who))
                              : config.myPalette.windowText
                 shadowPadding: (model.column === 1) ? 6 : 0 //some padding for the word column
                 shadowVertAlign: Text.AlignTop
@@ -127,7 +127,7 @@ ColumnLayout {
                                                            : ""
                                            : ""
                 style: (model.column === 2) && bonuswho > -1 ? Text.Outline : Text.Normal
-                styleColor: (model.column === 2) && bonuswho > -1 ? Qt.lighter(config.playercolors.get(bonuswho).itemColor) : ""
+                styleColor: (model.column === 2) && bonuswho > -1 ? Qt.lighter(config.playerColor(bonuswho)) : ""
                 color: isDark(config.myPalette.window)
                        ? Qt.lighter(config.myPalette.windowText, 0.8)
                        : Qt.darker(config.myPalette.windowText, 0.8)

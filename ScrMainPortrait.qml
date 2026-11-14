@@ -170,6 +170,7 @@ ColumnLayout {
                 RadioButton { id: miLandscapeView; action: acLandscapeView }
                 RadioButton { action: acPortraitView }
             }
+            LongMenuItem { action: acUpdate }
             LongMenuItem { action: acAbout }
             MenuSeparator { }
             LongMenuItem { action: acExit }

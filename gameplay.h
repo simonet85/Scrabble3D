@@ -142,6 +142,9 @@ public:
     explicit GamePlay(QQmlEngine *engine);
 
     Q_INVOKABLE void checkForUpdates();
+    Q_INVOKABLE void checkForUpdatesNow(); // asked by the user: says also when everything is up to date
+    bool m_bManualUpdateCheck = false;
+    int reapplyImportedWords(const QString &dictionaryFile); // after an update of the dictionary
     Q_INVOKABLE void runDemo();
 
     Q_INVOKABLE void localize(const QString fileName);

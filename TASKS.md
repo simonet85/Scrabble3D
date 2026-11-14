@@ -43,14 +43,20 @@
 
 ### Coach et dictionnaire
 - [ ] 9. Onglet Coach dans la mise en page mobile.
-- [ ] 10. Vérification de mise à jour du dictionnaire (liste officielle plus récente).
+- [x] **10. Mise à jour du dictionnaire.** Menu Aide → « Rechercher des mises à jour » : le jeu lit la liste
+  officielle du serveur et propose les dictionnaires et traductions plus récents, ou dit que tout est à jour (la
+  vérification automatique reste hebdomadaire). Les mots importés sont gardés dans `<dictionnaire>.imported.txt` :
+  après une mise à jour du dictionnaire, ils sont ajoutés de nouveau à la nouvelle édition.
 - [ ] 11. Clés d'API chiffrées (gestionnaire d'identifiants de Windows) au lieu de `coach.ini` en clair.
 
 ### Réseau et technique
 - [ ] 12. Connexion chiffrée au serveur ; abandon et tirage au sort en partie réseau.
-- [ ] 13. Installateur Windows (`windeployqt`) pour partager le jeu sans installer Qt.
-- [ ] 14. Corriger l'erreur QML `ScrBoard.qml:75` (couleurs non chargées à la construction du plateau), présente avant
-  tout ce travail.
+- [x] **13. Paquet Windows.** `deploy\package-windows.ps1` compile en release, rassemble Qt avec `windeployqt`
+  dans `dist\Scrabble3D\` (110 Mo) et en fait un zip (40 Mo) qui se lance sans Qt installé. Si Inno Setup 6 est
+  installé, il produit aussi `Scrabble3D-<version>-setup.exe` (`deploy\scrabble3d.iss`, en français et anglais).
+- [x] **14. Erreur QML `ScrBoard.qml:75`.** Les couleurs étaient lues avant d'être chargées : `config.fieldColor()`
+  et `config.playerColor()` renvoient un gris neutre en attendant, puis la vraie couleur. Les tests ne filtrent
+  plus cette erreur.
 
 ## Déjà fait
 
