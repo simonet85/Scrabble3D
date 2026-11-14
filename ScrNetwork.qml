@@ -277,7 +277,18 @@ Dialog {
         name.text = configData["nw_name"]
         password.text = configData["nw_pass"]
         email.text = configData["nw_mail"]
-        countryBox.currentIndex = configData["nw_country"]
+        server.editText = configData["nw_server"] || "scrabble3d.ignorelist.com:5001"
+        // first start: the country of the system settings instead of the first entry of the list
+        var savedCountry = configData["nw_country"]
+        if (savedCountry === undefined || savedCountry === "") {
+            const sys = GamePlay.systemCountry()
+            for (var i = 0; i < countriesModel.count; i++)
+                if (countriesModel.get(i).country === sys) {
+                    countryBox.currentIndex = i
+                    break
+                }
+        } else
+            countryBox.currentIndex = savedCountry
         city.text = configData["nw_city"]
         network.focus = true
     }
@@ -292,8 +303,15 @@ Dialog {
             ComboBox {
                 id: server
                 Layout.fillWidth: true
-                model: ["Free International Scrabble Server"]
-                //TODO QML network: make server variable
+                editable: true //any server can be typed: host or host:port
+                model: ["scrabble3d.ignorelist.com:5001"]
+            }
+            Label {
+                Layout.fillWidth: true
+                wrapMode: Text.WordWrap
+                color: "#b00020"
+                font.pixelSize: 12
+                text: qsTr("The connection to the server is not encrypted: the password is sent as plain text. Do not use a password that you use elsewhere.")
             }
             Label { text: qsTr("Login name:") }
             TextField {
@@ -362,7 +380,7 @@ Dialog {
     }
 
     onAccepted: {
-        GamePlay.connect(name.text, password.text, email.text, countryBox.currentText, city.text)
+        GamePlay.connect(name.text, password.text, email.text, countryBox.currentText, city.text, server.editText)
 
         var configData = {}
         configData["nw_name"] = name.text
@@ -370,6 +388,7 @@ Dialog {
         configData["nw_mail"] = email.text
         configData["nw_country"] = countryBox.currentIndex
         configData["nw_city"] = city.text
+        configData["nw_server"] = server.editText
         GamePlay.saveConfig("", configData)
     }
 }

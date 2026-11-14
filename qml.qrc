@@ -297,6 +297,7 @@
         <file>resources/netw_connect.png</file>
         <file>resources/netw_disco.png</file>
         <file>ScrNetwork.qml</file>
+        <file>ScrCoach.qml</file>
         <file>resources/group.png</file>
         <file>resources/dummy.png</file>
         <file>resources/eye.png</file>

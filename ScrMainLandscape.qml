@@ -39,6 +39,8 @@ ColumnLayout {
             LongMenuItem { action: acCambioSecco }
             LongMenuItem { action: acChallenge }
             LongMenuItem { action: acResign }
+            LongMenuItem { action: acCoachExplain }
+            LongMenuItem { action: acCoachDefine }
             LongMenuItem { action: acComputeMove }
             MenuSeparator { }
             LongMenuItem { action: acNetwork }
@@ -48,6 +50,8 @@ ColumnLayout {
             title: qsTr("&Configuration")
             LongMenuItem { action: acConfiguration }
             LongMenuItem { action: acDictionary }
+            LongMenuItem { action: acImportWords }
+            LongMenuItem { action: acCoachConfig }
             MenuSeparator { }
             Menu {
                 title: qsTr("&View Mode")

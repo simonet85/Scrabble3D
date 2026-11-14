@@ -141,12 +141,16 @@ ColumnLayout {
             LongMenuItem { action: acCambioSecco }
             LongMenuItem { action: acChallenge }
             LongMenuItem { action: acResign }
+            LongMenuItem { action: acCoachExplain }
+            LongMenuItem { action: acCoachDefine }
             LongMenuItem { action: acComputeMove }
             MenuSeparator { }
             LongMenuItem { action: acLoadGame }
             LongMenuItem { action: acSaveGame }
             MenuSeparator { }
             LongMenuItem { action: acDictionary }
+            LongMenuItem { action: acImportWords }
+            LongMenuItem { action: acCoachConfig }
             LongMenuItem { action: acNetwork; icon.source: "" }
 
             MenuSeparator { }

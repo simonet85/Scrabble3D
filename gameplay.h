@@ -32,6 +32,8 @@ enum TimeControlType {tcNoLimit=0,
                       tcPerMove=1,
                       tcPerGame=2};
 
+class coach;
+
 class GamePlay : public QObject
 {
     Q_OBJECT
@@ -121,7 +123,8 @@ public:
 
     Q_INVOKABLE void localize(const QString fileName);
     Q_INVOKABLE bool deleteLocFile(const QString fileName) { return m_pLocListModel->deleteLocFile(fileName); };
-    Q_INVOKABLE void connect(QString name, QString password, QString email, QString country, QString city);
+    Q_INVOKABLE void connect(QString name, QString password, QString email, QString country, QString city, QString server);
+    Q_INVOKABLE QString systemCountry() const; // English name of the country of the system settings, "" if unknown
     Q_INVOKABLE void disconnect();
     Q_INVOKABLE void chat(QString aMessage);
 
@@ -149,6 +152,16 @@ public:
         emit onSend(network::nwLoadGame, m_pNetwork->localPlayerName(), "Name="+fileName);
     }
     Q_INVOKABLE void loadDictionary(const QString fileName, const QString categories) { m_pDictionary->loadDictionary(fileName, categories); }
+    // merges a word list (file url) into the dictionary file and reloads it; returns a short report
+    Q_INVOKABLE QString importWordList(const QString dictionaryFile, const QString wordListUrl, const QString categories);
+    // optional AI coach (needs the API key of the user): it advises, the dictionary decides
+    Q_INVOKABLE bool coachHasKey();
+    Q_INVOKABLE QString coachMaskedKey();
+    Q_INVOKABLE QString coachModel();
+    Q_INVOKABLE void coachSave(const QString key, const QString model); // an empty key keeps the saved one
+    Q_INVOKABLE void coachClearKey();
+    Q_INVOKABLE void coachExplain(); // explains the best moves for the current rack
+    Q_INVOKABLE void coachDefine();  // short definitions of the words of the last move
     Q_INVOKABLE bool canResign() const { return m_bIsRunning && !m_bIsConnected && !m_bIsHistory && m_nPlayerCount == 2 && m_nCurrentMove > 0; } // game course must have at least one move
     Q_INVOKABLE void resign(); // FISF 4.11: "J'abandonne", opponent has to agree
     Q_INVOKABLE void deleteDictionary(const QString fileName) { m_pDicListModel->deleteDic(fileName); }
@@ -318,6 +331,13 @@ private:
     int m_nScrabbleBonus;                     // bonus when all pieces are placed, usually 50
     int m_nScrabbleExtraBonus = 0;            // extra bonus per piece placed beyond 7 when all are placed (FISF 3.1.2c, original formulas)
     bool m_bWordCheckPerWord = false;         // challenge penalty is given per challenged word instead of per move (FISF 3.5.3)
+    coach *m_pCoach = nullptr;
+    bool m_bCoachBusy = false;
+    coach *coachClient();
+    bool coachReady();                        // key, consent, no request in progress
+    QString coachBoardText();
+    int m_nComputerLevel = 3;                 // computelevel::Level of the computer player (3 = Master)
+    int chooseComputerMove();                 // index (0-based) of the move to play among the computed ones, -1 if none
     int m_nCheckedWords = 0;                  // number of words of the last doCheckWords()
     int m_nUnknownWords = 0;                  // number of those words not accepted
     int scrabbleBonusFor(const int nPlaced) const;

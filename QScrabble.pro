@@ -12,12 +12,16 @@ SOURCES += \
         board.cpp \
         boardmodel.cpp \
         computemove.cpp \
+        coach.cpp \
+        computelevel.cpp \
         cubemodel.cpp \
         dictionary.cpp \
+        dicimport.cpp \
         dictionarymodel.cpp \
         downloadmanager.cpp \
         gamecoursemodel.cpp \
         gameplay_network.cpp \
+        gameplay_coach.cpp \
         locmodel.cpp \
         move.cpp \
         main.cpp \
@@ -34,9 +38,13 @@ HEADERS += \
         board.h \
         boardmodel.h \
         computemove.h \
+        coach.h \
+        serveraddress.h \
+        computelevel.h \
         configpath.h \
         cubemodel.h \
         dictionary.h \
+        dicimport.h \
         dictionarymodel.h \
         downloadmanager.h \
         gamecoursemodel.h \
