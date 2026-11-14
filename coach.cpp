@@ -177,6 +177,19 @@ void coach::setAutoAdvice(bool on)
     s.sync();
 }
 
+bool coach::flag(const QString &name, bool defaultValue) const
+{
+    QSettings s = openSettings(m_sSettingsPath);
+    return s.value(name, defaultValue).toBool();
+}
+
+void coach::setFlag(const QString &name, bool value)
+{
+    QSettings s = openSettings(m_sSettingsPath);
+    s.setValue(name, value);
+    s.sync();
+}
+
 QString coach::requestUrl() const
 {
     const QString p = provider();

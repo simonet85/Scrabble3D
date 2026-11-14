@@ -1,0 +1,110 @@
+#include "frenchsupplement.h"
+
+// generated from the list of the texts added to the game (see TASKS.md); a text is the English source of tr()/qsTr()
+const QHash<QString, QString> &frenchsupplement::table()
+{
+    static const QHash<QString, QString> texts = {
+        {QString::fromUtf8(R"~~(Sound:)~~"), QString::fromUtf8(R"~~(Son :)~~")},
+        {QString::fromUtf8(R"~~(Sound for a Scrabble)~~"), QString::fromUtf8(R"~~(Son lors d'un Scrabble)~~")},
+        {QString::fromUtf8(R"~~(Volume: %1 %)~~"), QString::fromUtf8(R"~~(Volume : %1 %)~~")},
+        {QString::fromUtf8(R"~~(Test)~~"), QString::fromUtf8(R"~~(Tester)~~")},
+        {QString::fromUtf8(R"~~(Extra bonus per additional tile:)~~"), QString::fromUtf8(R"~~(Bonus par tuile supplémentaire :)~~")},
+        {QString::fromUtf8(R"~~(Original formulas with more than 7 tiles on the rack: each tile beyond the seventh adds this bonus to the 'bingo' bonus)~~"), QString::fromUtf8(R"~~(Formules originales avec plus de 7 tuiles sur le chevalet : chaque tuile au-delà de la septième ajoute ce bonus à celui du Scrabble)~~")},
+        {QString::fromUtf8(R"~~(Computer level:)~~"), QString::fromUtf8(R"~~(Niveau de l'ordinateur :)~~")},
+        {QString::fromUtf8(R"~~(Beginner)~~"), QString::fromUtf8(R"~~(Débutant)~~")},
+        {QString::fromUtf8(R"~~(Intermediate)~~"), QString::fromUtf8(R"~~(Intermédiaire)~~")},
+        {QString::fromUtf8(R"~~(Advanced)~~"), QString::fromUtf8(R"~~(Avancé)~~")},
+        {QString::fromUtf8(R"~~(Master)~~"), QString::fromUtf8(R"~~(Maître)~~")},
+        {QString::fromUtf8(R"~~(Beginner: plays ordinary moves
+Intermediate: plays one of the best moves
+Advanced: also thinks about the pieces it keeps
+Master: best balance between points and the pieces kept)~~"), QString::fromUtf8(R"~~(Débutant : joue des coups ordinaires
+Intermédiaire : joue l'un des meilleurs coups
+Avancé : pense aussi aux lettres qu'il garde
+Maître : meilleur équilibre entre les points et les lettres gardées)~~")},
+        {QString::fromUtf8(R"~~(Penalty per challenged word)~~"), QString::fromUtf8(R"~~(Pénalité par mot contesté)~~")},
+        {QString::fromUtf8(R"~~(The penalty is multiplied by the number of words wrongly challenged (all words of the move))~~"), QString::fromUtf8(R"~~(La pénalité est multipliée par le nombre de mots contestés à tort (tous les mots du coup))~~")},
+        {QString::fromUtf8(R"~~(AI coach)~~"), QString::fromUtf8(R"~~(Coach IA)~~")},
+        {QString::fromUtf8(R"~~(Paste your API key here)~~"), QString::fromUtf8(R"~~(Collez votre clé d'API ici)~~")},
+        {QString::fromUtf8(R"~~(The coach explains the best moves and defines the words played. It only advises: the dictionary alone decides whether a word is valid, the answers of the coach are never used for that.)~~"), QString::fromUtf8(R"~~(Le coach explique les meilleurs coups et définit les mots joués. Il ne fait que conseiller : seul le dictionnaire décide si un mot est valide, les réponses du coach ne servent jamais à cela.)~~")},
+        {QString::fromUtf8(R"~~(Service:)~~"), QString::fromUtf8(R"~~(Service :)~~")},
+        {QString::fromUtf8(R"~~(API key:)~~"), QString::fromUtf8(R"~~(Clé d'API :)~~")},
+        {QString::fromUtf8(R"~~(Model:)~~"), QString::fromUtf8(R"~~(Modèle :)~~")},
+        {QString::fromUtf8(R"~~(The key is stored in a file of your user profile (coach.ini), not encrypted. The coach sends the board, your rack and the best moves to the online service, which may charge your key. Nothing is sent as long as you do not ask the coach.)~~"), QString::fromUtf8(R"~~(La clé est enregistrée dans un fichier de votre profil utilisateur (coach.ini), sans chiffrement. Le coach envoie le plateau, votre chevalet et les meilleurs coups au service en ligne, qui peut facturer votre clé. Rien n'est envoyé tant que vous ne sollicitez pas le coach.)~~")},
+        {QString::fromUtf8(R"~~(Remove the saved key)~~"), QString::fromUtf8(R"~~(Supprimer la clé enregistrée)~~")},
+        {QString::fromUtf8(R"~~(Advice (automatic))~~"), QString::fromUtf8(R"~~(Conseil (automatique))~~")},
+        {QString::fromUtf8(R"~~(Definitions)~~"), QString::fromUtf8(R"~~(Définitions)~~")},
+        {QString::fromUtf8(R"~~(Game review)~~"), QString::fromUtf8(R"~~(Bilan de partie)~~")},
+        {QString::fromUtf8(R"~~(Review (coach))~~"), QString::fromUtf8(R"~~(Bilan (coach))~~")},
+        {QString::fromUtf8(R"~~(Advice)~~"), QString::fromUtf8(R"~~(Conseil)~~")},
+        {QString::fromUtf8(R"~~(Compares each of your moves with the best move that was possible at that turn. Available when the game is over.)~~"), QString::fromUtf8(R"~~(Compare chacun de vos coups au meilleur coup possible à ce tour. Disponible quand la partie est terminée.)~~")},
+        {QString::fromUtf8(R"~~(Clear)~~"), QString::fromUtf8(R"~~(Effacer)~~")},
+        {QString::fromUtf8(R"~~(Advice at each of my turns)~~"), QString::fromUtf8(R"~~(Conseil à chacun de mes tours)~~")},
+        {QString::fromUtf8(R"~~(The coach looks at your rack at the start of your turn and explains the best moves. It needs a key and your agreement given once with Game > Coach.)~~"), QString::fromUtf8(R"~~(Le coach regarde votre chevalet au début de votre tour et explique les meilleurs coups. Il faut une clé et votre accord, donné une fois avec Partie > Coach.)~~")},
+        {QString::fromUtf8(R"~~(Record my best move at each turn (game review))~~"), QString::fromUtf8(R"~~(Enregistrer mon meilleur coup à chaque tour (bilan de partie))~~")},
+        {QString::fromUtf8(R"~~(At the start of each of your turns the game computes the best move possible (about a second) and keeps only its score. At the end of the game the review compares it with what you played. Nothing is shown during the game.)~~"), QString::fromUtf8(R"~~(Au début de chacun de vos tours, le jeu calcule le meilleur coup possible (environ une seconde) et n'en garde que le score. À la fin de la partie, le bilan le compare à ce que vous avez joué. Rien n'est affiché pendant la partie.)~~")},
+        {QString::fromUtf8(R"~~(The coach is thinking...)~~"), QString::fromUtf8(R"~~(Le coach réfléchit...)~~")},
+        {QString::fromUtf8(R"~~(No advice yet. Ask the coach with the Game menu, or tick "Advice at each of my turns" to watch it work during the game.)~~"), QString::fromUtf8(R"~~(Aucun conseil pour le moment. Interrogez le coach avec le menu Partie, ou cochez « Conseil à chacun de mes tours » pour le voir travailler pendant la partie.)~~")},
+        {QString::fromUtf8(R"~~(Coach)~~"), QString::fromUtf8(R"~~(Coach)~~")},
+        {QString::fromUtf8(R"~~(The connection to the server is not encrypted: the password is sent as plain text. Do not use a password that you use elsewhere.)~~"), QString::fromUtf8(R"~~(La connexion au serveur n'est pas chiffrée : le mot de passe est envoyé en clair. N'utilisez pas un mot de passe que vous utilisez ailleurs.)~~")},
+        {QString::fromUtf8(R"~~(Draw a letter to decide who starts)~~"), QString::fromUtf8(R"~~(Tirer une lettre pour désigner le premier joueur)~~")},
+        {QString::fromUtf8(R"~~(The API key is not valid or not allowed.)~~"), QString::fromUtf8(R"~~(La clé d'API n'est pas valide ou n'est pas autorisée.)~~")},
+        {QString::fromUtf8(R"~~(Too many requests or no credit left; try again later.)~~"), QString::fromUtf8(R"~~(Trop de requêtes ou plus de crédit ; réessayez plus tard.)~~")},
+        {QString::fromUtf8(R"~~(The service is overloaded; try again later.)~~"), QString::fromUtf8(R"~~(Le service est surchargé ; réessayez plus tard.)~~")},
+        {QString::fromUtf8(R"~~(The service answered with the error %1.)~~"), QString::fromUtf8(R"~~(Le service a répondu par l'erreur %1.)~~")},
+        {QString::fromUtf8(R"~~(No API key: enter it in Configuration > AI coach.)~~"), QString::fromUtf8(R"~~(Aucune clé d'API : saisissez-la dans Configuration > Coach IA.)~~")},
+        {QString::fromUtf8(R"~~(The service answered without any text.)~~"), QString::fromUtf8(R"~~(Le service a répondu sans aucun texte.)~~")},
+        {QString::fromUtf8(R"~~(The service did not answer in time. Try again, or choose another service in Configuration > AI coach.)~~"), QString::fromUtf8(R"~~(Le service n'a pas répondu à temps. Réessayez, ou choisissez un autre service dans Configuration > Coach IA.)~~")},
+        {QString::fromUtf8(R"~~(The service cannot be reached: %1)~~"), QString::fromUtf8(R"~~(Le service est injoignable : %1)~~")},
+        {QString::fromUtf8(R"~~(Match sheet: %1 %2 - %3 %4, difference %5 (limited to 100 points).)~~"), QString::fromUtf8(R"~~(Feuille de match : %1 %2 - %3 %4, écart %5 (plafonné à 100 points).)~~")},
+        {QString::fromUtf8(R"~~(Draw for the first move: %1 - %2 starts.)~~"), QString::fromUtf8(R"~~(Tirage du premier coup : %1 - %2 commence.)~~")},
+        {QString::fromUtf8(R"~~(%1 resigns.)~~"), QString::fromUtf8(R"~~(%1 abandonne.)~~")},
+        {QString::fromUtf8(R"~~(%1, do you agree?)~~"), QString::fromUtf8(R"~~(%1, êtes-vous d'accord ?)~~")},
+        {QString::fromUtf8(R"~~(%1 resigns, %2 wins the game.)~~"), QString::fromUtf8(R"~~(%1 abandonne, %2 gagne la partie.)~~")},
+        {QString::fromUtf8(R"~~(<b>SCRABBLE! %1 places all pieces with %2 and gets a bonus of %3 points.</b>)~~"), QString::fromUtf8(R"~~(<b>SCRABBLE ! %1 pose toutes ses tuiles avec %2 et reçoit un bonus de %3 points.</b>)~~")},
+        {QString::fromUtf8(R"~~(No dictionary is selected.)~~"), QString::fromUtf8(R"~~(Aucun dictionnaire n'est sélectionné.)~~")},
+        {QString::fromUtf8(R"~~(Import failed: %1)~~"), QString::fromUtf8(R"~~(Échec de l'import : %1)~~")},
+        {QString::fromUtf8(R"~~(Import finished: no new word (%1 already known, %2 lines ignored).)~~"), QString::fromUtf8(R"~~(Import terminé : aucun mot nouveau (%1 déjà connus, %2 lignes ignorées).)~~")},
+        {QString::fromUtf8(R"~~(Dictionary %1: %2 words added (%3 already known, %4 lines ignored), %5 words in total. Previous version saved as %6.)~~"), QString::fromUtf8(R"~~(Dictionnaire %1 : %2 mots ajoutés (%3 déjà connus, %4 lignes ignorées), %5 mots au total. Ancienne version enregistrée sous %6.)~~")},
+        {QString::fromUtf8(R"~~(Coach: %1)~~"), QString::fromUtf8(R"~~(Coach : %1)~~")},
+        {QString::fromUtf8(R"~~(The coach is still thinking...)~~"), QString::fromUtf8(R"~~(Le coach réfléchit encore...)~~")},
+        {QString::fromUtf8(R"~~(The coach sends data of this game to an online AI service (%1): the board, your rack and the best moves found. Nothing else is sent.)~~"), QString::fromUtf8(R"~~(Le coach envoie des données de cette partie à un service d'IA en ligne (%1) : le plateau, votre chevalet et les meilleurs coups trouvés. Rien d'autre n'est envoyé.)~~")},
+        {QString::fromUtf8(R"~~(The service is used with your API key and may be charged. Do you want to continue?)~~"), QString::fromUtf8(R"~~(Le service est utilisé avec votre clé d'API et peut être facturé. Voulez-vous continuer ?)~~")},
+        {QString::fromUtf8(R"~~(The coach is available in a running 2D game that is not played on the network.)~~"), QString::fromUtf8(R"~~(Le coach est disponible dans une partie 2D en cours qui n'est pas jouée en réseau.)~~")},
+        {QString::fromUtf8(R"~~(The computer is busy, try again in a moment.)~~"), QString::fromUtf8(R"~~(L'ordinateur est occupé, réessayez dans un instant.)~~")},
+        {QString::fromUtf8(R"~~(Rack %1 - %2 possible moves, recommended: %3 (%4 points))~~"), QString::fromUtf8(R"~~(Chevalet %1 - %2 coups possibles, recommandé : %3 (%4 points))~~")},
+        {QString::fromUtf8(R"~~(The coach is available in a running game that is not played on the network.)~~"), QString::fromUtf8(R"~~(Le coach est disponible dans une partie en cours qui n'est pas jouée en réseau.)~~")},
+        {QString::fromUtf8(R"~~(No word has been played yet.)~~"), QString::fromUtf8(R"~~(Aucun mot n'a encore été joué.)~~")},
+        {QString::fromUtf8(R"~~(Definitions of: %1)~~"), QString::fromUtf8(R"~~(Définitions de : %1)~~")},
+        {QString::fromUtf8(R"~~(Game review: no data. The best move is recorded at the start of each of your turns (option of the Coach tab).)~~"), QString::fromUtf8(R"~~(Bilan de partie : aucune donnée. Le meilleur coup est enregistré au début de chacun de vos tours (option de l'onglet Coach).)~~")},
+        {QString::fromUtf8(R"~~(computed by the game)~~"), QString::fromUtf8(R"~~(calculé par le jeu)~~")},
+        {QString::fromUtf8(R"~~(Review of the game: %1 moves analysed)~~"), QString::fromUtf8(R"~~(Bilan de la partie : %1 coups analysés)~~")},
+        {QString::fromUtf8(R"~~(Comment of the coach on the review)~~"), QString::fromUtf8(R"~~(Commentaire du coach sur le bilan)~~")},
+        {QString::fromUtf8(R"~~(Invalid server address: %1)~~"), QString::fromUtf8(R"~~(Adresse de serveur invalide : %1)~~")},
+        {QString::fromUtf8(R"~~(Import word list...)~~"), QString::fromUtf8(R"~~(Importer une liste de mots...)~~")},
+        {QString::fromUtf8(R"~~(Coach: explain the best moves)~~"), QString::fromUtf8(R"~~(Coach : expliquer les meilleurs coups)~~")},
+        {QString::fromUtf8(R"~~(Coach: define the last words)~~"), QString::fromUtf8(R"~~(Coach : définir les derniers mots)~~")},
+        {QString::fromUtf8(R"~~(AI coach...)~~"), QString::fromUtf8(R"~~(Coach IA...)~~")},
+        {QString::fromUtf8(R"~~(Resign)~~"), QString::fromUtf8(R"~~(Abandonner)~~")},
+        {QString::fromUtf8(R"~~(Import a word list into the dictionary)~~"), QString::fromUtf8(R"~~(Importer une liste de mots dans le dictionnaire)~~")},
+        {QString::fromUtf8(R"~~(Word lists (*.txt *.csv *.lst))~~"), QString::fromUtf8(R"~~(Listes de mots (*.txt *.csv *.lst))~~")},
+        {QString::fromUtf8(R"~~(Game review - %1)~~"), QString::fromUtf8(R"~~(Bilan de partie - %1)~~")},
+        {QString::fromUtf8(R"~~(%1 points scored; the best possible at each turn would have given %2 points: %3 % of the best.)~~"), QString::fromUtf8(R"~~(%1 points marqués ; le meilleur coup à chaque tour aurait donné %2 points : %3 % du meilleur.)~~")},
+        {QString::fromUtf8(R"~~(%1 of %2 moves were as good as the best move.)~~"), QString::fromUtf8(R"~~(%1 coups sur %2 étaient aussi bons que le meilleur coup.)~~")},
+        {QString::fromUtf8(R"~~(No points lost: every move was as good as the best one.)~~"), QString::fromUtf8(R"~~(Aucun point perdu : chaque coup valait le meilleur coup.)~~")},
+        {QString::fromUtf8(R"~~(Biggest losses:)~~"), QString::fromUtf8(R"~~(Plus grosses pertes :)~~")},
+        {QString::fromUtf8(R"~~(no word)~~"), QString::fromUtf8(R"~~(aucun mot)~~")},
+        {QString::fromUtf8(R"~~(Turn %1: %2 (%3 points) instead of %4 (%5 points), %6 points lost.)~~"), QString::fromUtf8(R"~~(Tour %1 : %2 (%3 points) au lieu de %4 (%5 points), %6 points perdus.)~~")}
+    };
+    return texts;
+}
+
+QString frenchsupplement::translate(const char *context, const char *sourceText, const char *disambiguation, int n) const
+{
+    Q_UNUSED(context);
+    Q_UNUSED(disambiguation);
+    Q_UNUSED(n);
+    if (!sourceText)
+        return QString();
+    return table().value(QString::fromUtf8(sourceText)); // empty when unknown: the next translator answers
+}

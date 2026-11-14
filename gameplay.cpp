@@ -1,6 +1,7 @@
 #include "gameplay.h"
 #include "configpath.h"
 #include "sound.h"
+#include "frenchsupplement.h"
 #include "computelevel.h"
 #include "dicimport.h"
 
@@ -12,6 +13,7 @@ GamePlay::GamePlay(QQmlEngine *engine)
 {
 
     m_pTranslator = new QTranslator(this);
+    m_pFrenchSupplement = new frenchsupplement(this);
     m_pEngine = engine;
 
     m_bIsRunning = false;
@@ -23,6 +25,7 @@ GamePlay::GamePlay(QQmlEngine *engine)
     m_pMsgModel = new msgmodel(this);
     m_pGameCourseModel = new gamecoursemodel(this);
     m_pCoachModel = new coachmodel(this);
+    sound::configure(config::file("sound.ini"));
     QObject::connect(m_pGameCourseModel, SIGNAL(onSelectedMoveChanged(int)),
                      this, SLOT(doSelectedMoveChanged(int)));
 
@@ -93,7 +96,12 @@ void GamePlay::localize(const QString fileName)
     QFileInfo finfo(config::file(fileName));
     if (finfo.exists()) {
         qApp->removeTranslator(m_pTranslator);
+        qApp->removeTranslator(m_pFrenchSupplement);
         if ( m_pTranslator->load(fileName, config::file("")) ) {
+            // the translator installed last is asked first: the supplement comes before, so that the
+            // downloaded file keeps the priority and the supplement only fills in what it does not know
+            if (fileName.startsWith("fr", Qt::CaseInsensitive))
+                qApp->installTranslator(m_pFrenchSupplement);
             qApp->installTranslator(m_pTranslator);
             m_pEngine->retranslate();
             m_pLocListModel->loadingFinished(fileName);
@@ -329,12 +337,18 @@ void GamePlay::resign()
     emit isRunningChanged();
     emit statInfoChanged();
     emit statTotalChanged();
+    emit reviewChanged();
+    scheduleGameReview();
 }
 
 void GamePlay::startNewGame(QVariantMap gameConfig)
 {
-    if (!gameConfig["IsLoading"].toBool())
+    if (!gameConfig["IsLoading"].toBool()) {
         m_pCoachModel->clear();
+        m_turnBest.clear();
+        m_bReviewDone = false;
+        emit reviewChanged();
+    }
     doSelectedMoveChanged(-1);
     m_lPlayerNames.clear();
     emit numberOfPlayersChanged(); //refreh names in case the number is equal
@@ -490,8 +504,10 @@ void GamePlay::startNewGame(QVariantMap gameConfig)
         QCoreApplication::processEvents(QEventLoop::AllEvents);
         doComputeMove();
     }
-    else if (!gameConfig["IsLoading"].toBool())
+    else if (!gameConfig["IsLoading"].toBool()) {
         scheduleCoachAdvice(); // automatic advice for a human who opens the game
+        scheduleTurnBest();
+    }
 }
 
 void GamePlay::nextPlayer(const bool bIsLoading)
@@ -584,7 +600,8 @@ void GamePlay::nextPlayer(const bool bIsLoading)
                                 replaceAllLetters(m_pMoves.last()->ConnectedWords),
                                 m_nCurrentPlayer,
                                 m_pMoves.last()->Value(),
-                                m_nComputeResults > 0 ? m_pComputeMove->result(0)->Value() : 0,
+                                m_turnBest.contains(m_nCurrentMove) ? m_turnBest.value(m_nCurrentMove).first
+                                                                   : (m_nComputeResults > 0 ? m_pComputeMove->result(0)->Value() : 0),
                                 m_pMoves.last()->isScrabble(),
                                 m_nMoveTime,
                                 m_pRackModel->getInitialRack());
@@ -675,8 +692,10 @@ void GamePlay::nextPlayer(const bool bIsLoading)
         QCoreApplication::processEvents(QEventLoop::AllEvents);
         doComputeMove();
     }
-    else if (!bIsLoading)
+    else if (!bIsLoading) {
         scheduleCoachAdvice(); // automatic advice at the start of the turn of a human
+        scheduleTurnBest();
+    }
 }
 
 void GamePlay::doGameEnd()
@@ -768,6 +787,8 @@ void GamePlay::doGameEnd()
 
     m_bIsRunning = false;
     emit isRunningChanged();
+    emit reviewChanged();
+    scheduleGameReview();
 }
 
 // called from nextPlayer() and cambioSecco()
@@ -1313,10 +1334,13 @@ void GamePlay::doSelectedMoveChanged(int move)
 
 void GamePlay::computeMove()
 {
+    if (m_bIsComputing)
+        return; // a computation is already running: the engine is shared
     resetPieces(); //return previously placed pieces
     m_bIsComputing = true;  emit isComputingChanged();
     m_pComputeMove->run( m_bIsFirstMove, m_pBoard, m_pRackModel, m_pDictionary );
     m_bIsComputing = false; emit isComputingChanged();
+    recordTurnBest(); // for the review of the game
     //feedback
     if (m_bIsHistory || (m_lPlayerNames[m_nCurrentPlayer] != "Computer"))
         addMessage((m_nComputeResults == 0)
@@ -1444,6 +1468,27 @@ void GamePlay::placeBestMove(const int index)
 
     emit placedValueChanged(aMove->Value());
 }
+
+bool GamePlay::soundEnabled() { return sound::enabled(); }
+int GamePlay::soundVolume() { return sound::volume(); }
+
+void GamePlay::setSoundEnabled(bool on)
+{
+    if (sound::enabled() == on)
+        return;
+    sound::setEnabled(on);
+    emit soundChanged();
+}
+
+void GamePlay::setSoundVolume(int percent)
+{
+    if (sound::volume() == qBound(0, percent, 100))
+        return;
+    sound::setVolume(percent);
+    emit soundChanged();
+}
+
+void GamePlay::testSound() { playScrabbleSound(true); }
 
 void GamePlay::setComputeProgress(const int aProgress)
 {

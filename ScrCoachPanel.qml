@@ -18,10 +18,13 @@ Item {
     function kindText(kind) {
         return kind === "auto" ? qsTr("Advice (automatic)")
              : kind === "define" ? qsTr("Definitions")
+             : kind === "review" ? qsTr("Game review")
+             : kind === "reviewcomment" ? qsTr("Review (coach)")
              : qsTr("Advice")
     }
     function kindColor(kind) {
-        return kind === "auto" ? "#7b4fc4" : kind === "define" ? "#1b7f8c" : "#2e7d32"
+        return kind === "auto" ? "#7b4fc4" : kind === "define" ? "#1b7f8c"
+             : kind === "review" ? "#c26a00" : kind === "reviewcomment" ? "#a8456b" : "#2e7d32"
     }
 
     ColumnLayout {
@@ -54,6 +57,14 @@ Item {
                         opacity: 0.7
                     }
                     ToolButton {
+                        text: qsTr("Game review")
+                        enabled: !GamePlay.isRunning && GamePlay.reviewAvailable
+                        onClicked: GamePlay.gameReview()
+                        ToolTip.visible: hovered
+                        ToolTip.delay: 600
+                        ToolTip.text: qsTr("Compares each of your moves with the best move that was possible at that turn. Available when the game is over.")
+                    }
+                    ToolButton {
                         text: qsTr("Clear")
                         enabled: GamePlay.coachModel.count > 0
                         onClicked: GamePlay.coachClearHistory()
@@ -66,6 +77,14 @@ Item {
                     ToolTip.visible: hovered
                     ToolTip.delay: 600
                     ToolTip.text: qsTr("The coach looks at your rack at the start of your turn and explains the best moves. It needs a key and your agreement given once with Game > Coach.")
+                }
+                CheckBox {
+                    text: qsTr("Record my best move at each turn (game review)")
+                    checked: GamePlay.reviewRecording
+                    onToggled: GamePlay.reviewRecording = checked
+                    ToolTip.visible: hovered
+                    ToolTip.delay: 600
+                    ToolTip.text: qsTr("At the start of each of your turns the game computes the best move possible (about a second) and keeps only its score. At the end of the game the review compares it with what you played. Nothing is shown during the game.")
                 }
             }
         }

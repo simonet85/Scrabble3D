@@ -251,4 +251,34 @@ GridLayout {
         checkState: Qt.Checked
         onCheckedChanged: config.bColoredPlayers = checked
     }
+    ColorLabel {
+        id: lbSound
+        leftPadding: 8
+        text: qsTr("Sound:")
+        Layout.alignment: Qt.AlignRight
+    }
+    RowLayout {
+        ColorCheckBox {
+            id: cbSound
+            text: qsTr("Sound for a Scrabble")
+            checked: GamePlay.soundEnabled
+            onToggled: GamePlay.soundEnabled = checked
+        }
+        Slider {
+            id: slVolume
+            Layout.preferredWidth: 110
+            from: 0
+            to: 100
+            stepSize: 5
+            enabled: cbSound.checked
+            value: GamePlay.soundVolume
+            onMoved: GamePlay.soundVolume = value
+            ToolTip.visible: hovered
+            ToolTip.text: qsTr("Volume: %1 %").arg(Math.round(value))
+        }
+        ToolButton {
+            text: qsTr("Test")
+            onClicked: GamePlay.testSound()
+        }
+    }
 }

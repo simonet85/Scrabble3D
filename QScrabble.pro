@@ -14,6 +14,8 @@ SOURCES += \
         computemove.cpp \
         coach.cpp \
         coachmodel.cpp \
+        gamereview.cpp \
+        frenchsupplement.cpp \
         computelevel.cpp \
         cubemodel.cpp \
         dictionary.cpp \
@@ -41,6 +43,8 @@ HEADERS += \
         computemove.h \
         coach.h \
         coachmodel.h \
+        gamereview.h \
+        frenchsupplement.h \
         serveraddress.h \
         computelevel.h \
         configpath.h \
@@ -67,6 +71,8 @@ RESOURCES += \
         qml.qrc \
 
 TARGET = Scrabble3D
+
+win32: LIBS += -lwinmm # sound of the Scrabble (PlaySound)
 
 QML_IMPORT_NAME = Scrabble3D
 QML_IMPORT_MAJOR_VERSION = 4

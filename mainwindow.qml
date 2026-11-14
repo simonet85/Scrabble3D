@@ -246,6 +246,12 @@ ApplicationWindow {
         onTriggered: { main.showCoach(); GamePlay.coachDefine() }
     }
     Action {
+        id: acGameReview
+        text: qsTr("Game review")
+        enabled: !GamePlay.isRunning && GamePlay.reviewAvailable
+        onTriggered: { main.showCoach(); GamePlay.gameReview() }
+    }
+    Action {
         id: acCoachConfig
         text: qsTr("AI coach...")
         onTriggered: coachDialog.open()
