@@ -99,6 +99,7 @@ class GamePlay : public QObject
     Q_PROPERTY(bool isLocalPlayer READ getIsLocalPlayer NOTIFY isLocalPlayerChanged)
 
 signals:
+    void sanctionsChanged();
     void boardSizeChanged();
     void coachAutoAdviceChanged();
     void soundChanged();
@@ -208,6 +209,9 @@ public:
     Q_INVOKABLE void coachDefine();  // short definitions of the words of the last move
     Q_INVOKABLE bool canResign() const { return m_bIsRunning && !m_bIsConnected && !m_bIsHistory && m_nPlayerCount == 2 && m_nCurrentMove > 0; } // game course must have at least one move
     Q_INVOKABLE void resign(); // FISF 4.11: "J'abandonne", opponent has to agree
+    Q_INVOKABLE void sanction(int player, const QString &reason); // FISF 6.4: graded sanction of an infraction
+    Q_INVOKABLE QString nextSanction(int player);  // what the next infraction of the player leads to
+    Q_INVOKABLE bool canSanction();
     Q_INVOKABLE void deleteDictionary(const QString fileName) { m_pDicListModel->deleteDic(fileName); }
     Q_INVOKABLE void setCategoryChecked(const QString catName, const bool isChecked, const bool doReset = false)
         { m_pDictionary->setCategoryChecked(catName,isChecked);
@@ -421,6 +425,10 @@ private:
     int scrabbleBonusFor(const int nPlaced) const;
     int wordCount(const sharedMove &aMove) const;
     QString matchSheet() const;               // two player result with the difference limited to 100 points (FISF 5.3)
+    struct SanctionEntry { int move = 0; int player = 0; QString reason; int level = 0; int points = 0; };
+    QList<int> m_nInfractions;                // infractions per player in this game (FISF 6.4)
+    QList<SanctionEntry> m_lSanctions;        // sanctions of this game, for the match sheet
+    QString sanctionText(int level) const;
     QString drawFirstPlayer(const QVariantList &aLetterList, long nSeed); // FISF 2.1; reorders m_lPlayerNames
     bool m_bIsCLABBERS;                       // FEATURE: gameplay: whether CLABBER variant is allowed
     uint m_nPerformance;                      // absolute value: 0 = always the best word; >0 = randomly picked => doComputeMove()

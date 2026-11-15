@@ -109,8 +109,22 @@ Maître : meilleur équilibre entre les points et les lettres gardées)~~")},
         {QString::fromUtf8(R"~~(Hint)~~"), QString::fromUtf8(R"~~(Indice)~~")},
         {QString::fromUtf8(R"~~(AI coach...)~~"), QString::fromUtf8(R"~~(Coach IA...)~~")},
         {QString::fromUtf8(R"~~(Resign)~~"), QString::fromUtf8(R"~~(Abandonner)~~")},
+        {QString::fromUtf8(R"~~(Sanction...)~~"), QString::fromUtf8(R"~~(Sanction...)~~")},
         {QString::fromUtf8(R"~~(Import a word list into the dictionary)~~"), QString::fromUtf8(R"~~(Importer une liste de mots dans le dictionnaire)~~")},
-        {QString::fromUtf8(R"~~(Word lists (*.txt *.csv *.lst))~~"), QString::fromUtf8(R"~~(Listes de mots (*.txt *.csv *.lst))~~")}
+        {QString::fromUtf8(R"~~(Word lists (*.txt *.csv *.lst))~~"), QString::fromUtf8(R"~~(Listes de mots (*.txt *.csv *.lst))~~")},
+        {QString::fromUtf8(R"~~(Sanction)~~"), QString::fromUtf8(R"~~(Sanction)~~")},
+        {QString::fromUtf8(R"~~(Sanction applied: %1)~~"), QString::fromUtf8(R"~~(Sanction appliquée : %1)~~")},
+        {QString::fromUtf8(R"~~(Graded scale: reminder of the rules, then 5 points, 50 points, game lost and exclusion.)~~"), QString::fromUtf8(R"~~(Barème gradué : rappel du règlement, puis 5 points, 50 points, match perdu et exclusion.)~~")},
+        {QString::fromUtf8(R"~~(Player:)~~"), QString::fromUtf8(R"~~(Joueur :)~~")},
+        {QString::fromUtf8(R"~~(Infraction:)~~"), QString::fromUtf8(R"~~(Infraction :)~~")},
+        {QString::fromUtf8(R"~~(for example: tiles drawn before the clock was started)~~"), QString::fromUtf8(R"~~(par exemple : lettres tirées avant le déclenchement de la pendule)~~")},
+        {QString::fromUtf8(R"~~(reminder of the rules)~~"), QString::fromUtf8(R"~~(rappel du règlement)~~")},
+        {QString::fromUtf8(R"~~(penalty of 5 points)~~"), QString::fromUtf8(R"~~(pénalité de 5 points)~~")},
+        {QString::fromUtf8(R"~~(penalty of 50 points)~~"), QString::fromUtf8(R"~~(pénalité de 50 points)~~")},
+        {QString::fromUtf8(R"~~(game lost)~~"), QString::fromUtf8(R"~~(match perdu)~~")},
+        {QString::fromUtf8(R"~~(exclusion from the tournament)~~"), QString::fromUtf8(R"~~(exclusion du tournoi)~~")},
+        {QString::fromUtf8(R"~~(Sanction for %1%2: %3.)~~"), QString::fromUtf8(R"~~(Sanction pour %1%2 : %3.)~~")},
+        {QString::fromUtf8(R"~~(%1 loses the game, %2 wins.)~~"), QString::fromUtf8(R"~~(%1 perd la partie, %2 gagne.)~~")}
     };
     return texts;
 }

@@ -33,7 +33,12 @@
   adverses n'est ajoutée qu'au joueur qui a vidé son chevalet (§5.1.1) ; une partie finie par des passes ne fait que
   retirer à chacun la valeur de son chevalet. Corrigé aussi : un minuteur en double pouvait faire compter le temps
   deux fois.
-- [ ] 7. Barème de sanctions (§6.4) et export de la feuille de match (PDF ou CSV).
+- [x] **7. Barème de sanctions (§6.4).** Menu Partie → « Sanction... » : on choisit le joueur et on note
+  l'infraction ; le dialogue annonce la sanction qui s'applique. Barème par joueur : rappel du règlement, 5 points,
+  50 points, puis match perdu (score à 0, la partie se termine). Chaque sanction est annoncée dans les messages ;
+  les compteurs repartent à zéro à chaque nouvelle partie. Pas en partie réseau. Les sanctions ne sont pas
+  enregistrées avec la partie sauvegardée.
+- [ ] 7 bis. Export de la feuille de match (PDF ou CSV) — laissé de côté pour l'instant.
 - [ ] 8. Déclaration du joker avec la lettre représentée, notée sur la feuille de match (§3.1.4).
 
 ### Coach et dictionnaire
