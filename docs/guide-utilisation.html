@@ -1,0 +1,387 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Guide d'utilisation de Scrabble3D</title>
+<style>
+:root {
+  --bg: #fbfaf7; --fg: #1f2328; --muted: #5d6470; --line: #e3e0d8; --card: #ffffff;
+  --accent: #1f6f43; --accent-soft: #e5f2ea; --warn: #8a5a00; --warn-soft: #fdf3dc; --code: #f1efe9;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #15171a; --fg: #e6e6e3; --muted: #a2a7ae; --line: #2c3036; --card: #1c1f23;
+    --accent: #6cc495; --accent-soft: #1d3327; --warn: #f0c060; --warn-soft: #3a2f16; --code: #24282d;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #15171a; --fg: #e6e6e3; --muted: #a2a7ae; --line: #2c3036; --card: #1c1f23;
+  --accent: #6cc495; --accent-soft: #1d3327; --warn: #f0c060; --warn-soft: #3a2f16; --code: #24282d;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body { margin: 0; background: var(--bg); color: var(--fg); font: 16px/1.6 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+.layout { display: grid; grid-template-columns: 270px minmax(0, 1fr); max-width: 1180px; margin: 0 auto; gap: 40px; padding: 0 24px; }
+nav.toc { position: sticky; top: 0; align-self: start; max-height: 100vh; overflow-y: auto; padding: 32px 0; font-size: 14px; }
+nav.toc h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 0 0 10px; }
+nav.toc ol { list-style: none; padding: 0; margin: 0; counter-reset: s; }
+nav.toc li { margin: 2px 0; }
+nav.toc a { color: var(--fg); text-decoration: none; display: block; padding: 4px 8px; border-radius: 6px; }
+nav.toc a:hover { background: var(--accent-soft); }
+nav.toc ol ol { padding-left: 12px; font-size: 13px; }
+nav.toc ol ol a { color: var(--muted); }
+main { padding: 32px 0 80px; min-width: 0; }
+header.hero { border-bottom: 1px solid var(--line); padding-bottom: 20px; margin-bottom: 8px; }
+header.hero h1 { font-size: 34px; line-height: 1.2; margin: 0 0 8px; }
+header.hero p { color: var(--muted); margin: 0; max-width: 62ch; }
+h2 { font-size: 24px; margin: 48px 0 12px; padding-top: 8px; scroll-margin-top: 16px; }
+h3 { font-size: 18px; margin: 28px 0 8px; scroll-margin-top: 16px; }
+p, li { max-width: 72ch; }
+a { color: var(--accent); }
+code, kbd { font: 14px/1.4 ui-monospace, "Cascadia Mono", Consolas, monospace; background: var(--code); padding: 1px 6px; border-radius: 5px; }
+kbd { border: 1px solid var(--line); border-bottom-width: 2px; }
+pre { background: var(--code); padding: 14px 16px; border-radius: 8px; overflow-x: auto; font: 14px/1.5 ui-monospace, Consolas, monospace; }
+pre code { background: none; padding: 0; }
+.menu { font-weight: 600; white-space: nowrap; }
+table { border-collapse: collapse; width: 100%; margin: 12px 0 20px; font-size: 15px; display: block; overflow-x: auto; }
+th, td { text-align: left; vertical-align: top; padding: 8px 12px; border-bottom: 1px solid var(--line); }
+th { color: var(--muted); font-weight: 600; font-size: 13px; text-transform: uppercase; letter-spacing: .04em; }
+.note, .warn { border-radius: 8px; padding: 12px 16px; margin: 16px 0; max-width: 72ch; }
+.note { background: var(--accent-soft); border-left: 4px solid var(--accent); }
+.warn { background: var(--warn-soft); border-left: 4px solid var(--warn); }
+.note p, .warn p { margin: 0; }
+.steps { counter-reset: step; list-style: none; padding: 0; }
+.steps > li { counter-increment: step; position: relative; padding-left: 40px; margin: 12px 0; }
+.steps > li::before { content: counter(step); position: absolute; left: 0; top: 0; width: 26px; height: 26px; border-radius: 50%; background: var(--accent); color: var(--bg); font-weight: 700; font-size: 14px; display: grid; place-items: center; }
+.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin: 16px 0; }
+.card { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; }
+.card strong { display: block; margin-bottom: 4px; }
+.card span { color: var(--muted); font-size: 14px; }
+footer { color: var(--muted); font-size: 13px; border-top: 1px solid var(--line); margin-top: 56px; padding-top: 16px; }
+@media (max-width: 860px) {
+  .layout { grid-template-columns: 1fr; padding: 0 16px; gap: 0; }
+  nav.toc { position: static; max-height: none; padding: 20px 0 0; border-bottom: 1px solid var(--line); }
+  header.hero h1 { font-size: 28px; }
+}
+</style>
+</head>
+<body>
+<div class="layout">
+<nav class="toc" aria-label="Sommaire">
+  <h2>Sommaire</h2>
+  <ol>
+    <li><a href="#presentation">1. Présentation</a></li>
+    <li><a href="#installation">2. Installation</a>
+      <ol>
+        <li><a href="#inst-zip">Paquet portable (zip)</a></li>
+        <li><a href="#inst-setup">Installateur</a></li>
+        <li><a href="#inst-sources">Depuis les sources</a></li>
+        <li><a href="#premier-lancement">Premier lancement</a></li>
+      </ol>
+    </li>
+    <li><a href="#ecran">3. L'écran de jeu</a></li>
+    <li><a href="#partie">4. Jouer une partie</a></li>
+    <li><a href="#configuration">5. Paramétrage</a>
+      <ol>
+        <li><a href="#cfg-plateau">Plateau et son</a></li>
+        <li><a href="#cfg-lettres">Lettres</a></li>
+        <li><a href="#cfg-dico">Dictionnaire</a></li>
+        <li><a href="#cfg-regles">Règles</a></li>
+        <li><a href="#cfg-temps">Temps</a></li>
+        <li><a href="#cfg-verif">Vérification des mots</a></li>
+        <li><a href="#cfg-langue">Langue</a></li>
+      </ol>
+    </li>
+    <li><a href="#aides">6. Aides au jeu</a>
+      <ol>
+        <li><a href="#indice">Indice</a></li>
+        <li><a href="#ordinateur">Niveaux de l'ordinateur</a></li>
+        <li><a href="#coach">Coach IA</a></li>
+        <li><a href="#bilan">Bilan de partie</a></li>
+      </ol>
+    </li>
+    <li><a href="#arbitrage">7. Arbitrage et fin de partie</a></li>
+    <li><a href="#feuille">8. Feuille de match</a></li>
+    <li><a href="#dictionnaire">9. Dictionnaire et mises à jour</a></li>
+    <li><a href="#reseau">10. Jeu en réseau</a></li>
+    <li><a href="#fichiers">11. Fichiers et données</a></li>
+    <li><a href="#depannage">12. Dépannage</a></li>
+  </ol>
+</nav>
+
+<main>
+<header class="hero">
+  <h1>Guide d'utilisation de Scrabble3D</h1>
+  <p>De l'installation à la partie en réseau : tous les réglages, les aides au jeu et les règles d'arbitrage du Règlement international du Scrabble classique (FISF).</p>
+</header>
+
+<h2 id="presentation">1. Présentation</h2>
+<p>Scrabble3D est un jeu de Scrabble pour Windows, Linux, macOS et Android. On y joue seul contre l'ordinateur, à plusieurs sur le même appareil ou en réseau, sur un plateau classique en 2D ou sur un cube en 3D.</p>
+<div class="cards">
+  <div class="card"><strong>Règles officielles</strong><span>Tirage au sort, temps épuisé, contestation, sanctions, abandon, feuille de match.</span></div>
+  <div class="card"><strong>Aides</strong><span>Indice en deux temps, ordinateur à quatre niveaux, bilan de fin de partie.</span></div>
+  <div class="card"><strong>Coach IA</strong><span>Explications des meilleurs coups et définitions, avec Groq, Gemini, Anthropic ou OpenCode.</span></div>
+  <div class="card"><strong>Dictionnaire</strong><span>Français par défaut, mises à jour, import de nouvelles listes de mots.</span></div>
+</div>
+
+<h2 id="installation">2. Installation</h2>
+
+<h3 id="inst-zip">Paquet portable (zip)</h3>
+<ol class="steps">
+  <li>Récupérez le fichier <code>Scrabble3D-&lt;version&gt;-windows.zip</code>.</li>
+  <li>Décompressez-le où vous voulez, par exemple dans <code>Documents</code>.</li>
+  <li>Lancez <code>Scrabble3D.exe</code> dans le dossier <code>Scrabble3D</code>. Il n'y a rien à installer : Qt et toutes les bibliothèques nécessaires sont dans le dossier.</li>
+</ol>
+
+<h3 id="inst-setup">Installateur Windows (recommandé)</h3>
+<p>Le fichier <code>Scrabble3D-&lt;version&gt;-setup.exe</code> (par exemple <code>Scrabble3D-4.0.13-setup.exe</code>, environ 29 Mo) installe le jeu comme n'importe quel logiciel Windows.</p>
+<ol class="steps">
+  <li><strong>Lancez</strong> <code>Scrabble3D-4.0.13-setup.exe</code> par un double-clic.</li>
+  <li><strong>Avertissement de Windows.</strong> L'installateur n'est pas signé numériquement : Windows SmartScreen peut afficher « Windows a protégé votre ordinateur ». Cliquez sur <em>Informations complémentaires</em>, puis sur <em>Exécuter quand même</em>.</li>
+  <li><strong>Mode d'installation.</strong> Choisissez <em>Installer pour tous les utilisateurs</em> (droits d'administrateur demandés, dans <code>Program Files</code>) ou <em>Installer pour moi uniquement</em> (sans droits d'administrateur, dans votre profil).</li>
+  <li><strong>Langue de l'assistant</strong> : Français ou English.</li>
+  <li><strong>Dossier de destination</strong> : gardez celui proposé, ou choisissez-en un autre avec <em>Parcourir</em>.</li>
+  <li><strong>Tâches supplémentaires</strong> : cochez <em>Créer une icône sur le Bureau</em> si vous le souhaitez. Le raccourci du menu Démarrer est toujours créé.</li>
+  <li><strong>Installer</strong>, puis <strong>Terminer</strong>. Laissez cochée la case <em>Exécuter Scrabble3D</em> pour lancer le jeu tout de suite.</li>
+</ol>
+<table>
+  <tr><th>Ensuite</th><th>Comment</th></tr>
+  <tr><td>Lancer le jeu</td><td>Menu Démarrer &gt; <em>Scrabble3D</em>, ou l'icône du Bureau.</td></tr>
+  <tr><td>Mettre à jour</td><td>Lancez l'installateur de la nouvelle version : il remplace l'ancienne au même endroit. Vos réglages, dictionnaires et parties sont conservés.</td></tr>
+  <tr><td>Désinstaller</td><td><span class="menu">Paramètres &gt; Applications &gt; Applications installées &gt; Scrabble3D &gt; Désinstaller</span>, ou menu Démarrer &gt; Scrabble3D &gt; <em>Désinstaller Scrabble3D</em>.</td></tr>
+</table>
+<div class="note"><p>La désinstallation retire le programme mais pas vos données : réglages, dictionnaires, parties et feuilles de match restent dans <code>%LOCALAPPDATA%\Scrabble3D</code>, et les clés du coach restent dans le gestionnaire d'identifiants de Windows. Supprimez-les vous-même si vous voulez tout effacer (voir <a href="#fichiers">§11</a>).</p></div>
+
+<h3>Fabriquer l'installateur</h3>
+<p>Il faut <a href="https://jrsoftware.org/isinfo.php">Inno Setup 6</a> (gratuit), installable en une commande :</p>
+<pre><code>winget install JRSoftware.InnoSetup</code></pre>
+<p>Le script <code>deploy\package-windows.ps1</code> (voir <a href="#inst-sources">plus bas</a>) produit alors dans <code>dist\</code> le dossier portable, le zip et <code>Scrabble3D-&lt;version&gt;-setup.exe</code>. La version est lue dans <code>version.h</code>, et la description de l'installateur se trouve dans <code>deploy\scrabble3d.iss</code>.</p>
+
+<h3 id="inst-sources">Compiler depuis les sources</h3>
+<p>Il faut Qt 6.10 avec le compilateur MinGW 64 bits (installés par le Qt Online Installer, par exemple dans <code>C:\Qt</code>).</p>
+<pre><code>git clone https://github.com/simonet85/Scrabble3D.git
+cd Scrabble3D
+set PATH=C:\Qt\6.10.3\mingw_64\bin;C:\Qt\Tools\mingw1310_64\bin;%PATH%
+mkdir ..\Scrabble3D-build &amp;&amp; cd ..\Scrabble3D-build
+qmake ..\Scrabble3D\QScrabble.pro
+mingw32-make -j2
+release\Scrabble3D.exe</code></pre>
+<p>Pour fabriquer vous-même le paquet portable et le zip (plus l'installateur si Inno Setup 6 est installé) :</p>
+<pre><code>powershell -ExecutionPolicy Bypass -File deploy\package-windows.ps1</code></pre>
+<p>Le résultat est rangé dans <code>dist\</code>. Avec <code>-SkipBuild -BuildDir &lt;dossier&gt;</code>, le script réutilise une compilation existante.</p>
+
+<h3 id="premier-lancement">Premier lancement</h3>
+<ol class="steps">
+  <li><strong>Dictionnaire.</strong> Le dictionnaire français est celui par défaut. S'il n'est pas encore sur l'ordinateur, le jeu propose de le télécharger : acceptez.</li>
+  <li><strong>Langue.</strong> Choisissez le français dans <span class="menu">Configuration &gt; Configuration... &gt; Langue</span> (téléchargement de la traduction si besoin).</li>
+  <li><strong>Mises à jour.</strong> Une fois par semaine, le jeu vérifie seul s'il existe des dictionnaires ou des traductions plus récents.</li>
+  <li><strong>Première partie.</strong> <span class="menu">Partie &gt; Nouvelle partie</span> (<kbd>Ctrl</kbd>+<kbd>N</kbd>), puis <span class="menu">OK</span>.</li>
+</ol>
+
+<h2 id="ecran">3. L'écran de jeu</h2>
+<table>
+  <tr><th>Zone</th><th>Rôle</th></tr>
+  <tr><td>Plateau</td><td>Les cases primes (lettre et mot compte double ou triple) sont en couleur. Les tuiles du dernier coup sont mises en évidence.</td></tr>
+  <tr><td>Chevalet</td><td>Vos lettres, à glisser sur le plateau. Les boutons à côté permettent de mélanger, de rappeler les tuiles posées, d'échanger et de demander un indice.</td></tr>
+  <tr><td>Onglet <em>Messages</em></td><td>Tout ce qui se passe : coups joués, Scrabble, jokers, sanctions, erreurs. Un point rouge signale un nouveau message.</td></tr>
+  <tr><td>Onglet <em>Fil de jeu</em></td><td>Chaque coup avec ses points, le meilleur coup possible et le temps utilisé.</td></tr>
+  <tr><td>Onglet <em>Joueurs</em></td><td>Les joueurs connectés, en réseau seulement.</td></tr>
+  <tr><td>Onglet <em>Coach</em></td><td>Les réponses du coach IA et le bilan de partie. Un point rouge signale une nouvelle réponse.</td></tr>
+  <tr><td>Barre d'état</td><td>Scores, joueur actif, temps restant, lettres dans le sac.</td></tr>
+</table>
+<p><span class="menu">Configuration &gt; Mode d'affichage</span> passe de la mise en page <em>Bureau</em> (paysage) à <em>Mobile</em> (portrait, avec les onglets en bas de l'écran, Coach compris), ou laisse le jeu choisir (<em>Automatique</em>) selon la forme de la fenêtre.</p>
+
+<h2 id="partie">4. Jouer une partie</h2>
+<h3>Lancer la partie</h3>
+<p><span class="menu">Partie &gt; Nouvelle partie</span> ouvre le dialogue de départ : de 1 à 4 joueurs, chacun humain ou ordinateur, et un résumé des réglages en cours (plateau, lettres, dictionnaire, temps, vérification des mots).</p>
+<ul>
+  <li><strong>Tirer une lettre pour savoir qui commence</strong> (§2.1) : chaque joueur tire une lettre et le plus proche du A commence ; les jokers ne comptent pas et les ex æquo tirent à nouveau.</li>
+  <li><strong>Ordre aléatoire</strong> : mélange l'ordre des joueurs.</li>
+</ul>
+
+<h3>Pendant la partie</h3>
+<table>
+  <tr><th>Action</th><th>Comment</th></tr>
+  <tr><td>Poser un mot</td><td>Glisser les tuiles du chevalet sur le plateau, puis <span class="menu">Partie &gt; Joueur suivant</span> (<kbd>Ctrl</kbd>+<kbd>Tab</kbd>).</td></tr>
+  <tr><td>Rappeler les tuiles posées</td><td><kbd>Échap</kbd></td></tr>
+  <tr><td>Mélanger le chevalet</td><td><kbd>Ctrl</kbd>+<kbd>M</kbd></td></tr>
+  <tr><td>Passer</td><td><span class="menu">Partie &gt; Passer</span> (« Je passe », §3.2).</td></tr>
+  <tr><td>Échanger des lettres</td><td>Marquer les lettres à échanger : le bouton Passer devient <em>Échanger n lettre(s)</em> et termine le tour (§3.3). Il faut au moins 7 lettres dans le sac.</td></tr>
+  <tr><td>Calculer un coup</td><td><span class="menu">Partie &gt; Calculer un coup</span> (<kbd>Ctrl</kbd>+<kbd>F</kbd>) : liste les coups possibles (hors réseau).</td></tr>
+  <tr><td>Joker</td><td>En posant un joker, choisissez la lettre qu'il représente. Le jeu l'annonce (« joue un joker comme S dans LYSEZ (H10) ») et la note pour la feuille de match (§3.1.4).</td></tr>
+  <tr><td>Scrabble</td><td>Poser les 7 lettres donne la prime de Scrabble, avec une annonce et un son.</td></tr>
+  <tr><td>Cambio Secco</td><td>Une fois par partie, échanger tout le chevalet sans perdre son tour (si l'option est active).</td></tr>
+  <tr><td>Contester</td><td><span class="menu">Partie &gt; Contester le mot posé</span> pendant la période de contestation (mode Contestation).</td></tr>
+  <tr><td>Enregistrer / reprendre</td><td><span class="menu">Fichier &gt; Enregistrer sous</span> et <span class="menu">Fichier &gt; Charger</span> (fichiers <code>.ssg</code>).</td></tr>
+</table>
+
+<h2 id="configuration">5. Paramétrage</h2>
+<p>Tous les réglages sont dans <span class="menu">Configuration &gt; Configuration...</span> et sont gardés d'une session à l'autre. Ils s'appliquent à la <strong>prochaine</strong> partie.</p>
+
+<h3 id="cfg-plateau">Plateau et son</h3>
+<table>
+  <tr><th>Réglage</th><th>Effet</th></tr>
+  <tr><td>Modèle</td><td>Classique, Superscrabble, Superscrabble 3D ou plateau personnalisé.</td></tr>
+  <tr><td>Dimension, taille</td><td>2D ou 3D (cube), nombre de cases par côté.</td></tr>
+  <tr><td>Cases primes</td><td>Cliquez sur une case pour faire défiler ses types (plateau personnalisé).</td></tr>
+  <tr><td>Marqueurs, couleurs</td><td>Repères des cases primes, couleurs des cases et des joueurs.</td></tr>
+  <tr><td>Son</td><td>Son joué lors d'un Scrabble, volume, bouton <em>Tester</em>.</td></tr>
+</table>
+
+<h3 id="cfg-lettres">Lettres</h3>
+<p>Jeu de lettres et répartition (lettre, points, nombre), nombre de jokers, nombre de lettres sur le chevalet (7 en classique), lettres aléatoires et sens de lecture.</p>
+
+<h3 id="cfg-dico">Dictionnaire</h3>
+<p>Liste des dictionnaires avec leur version installée et la version disponible : <em>Charger</em>, <em>Télécharger</em>, <em>Supprimer</em>. Les catégories permettent d'ajouter ou de retirer des familles de mots. Si la répartition des lettres du dictionnaire ne correspond pas à celle de la configuration, le jeu propose de l'adopter.</p>
+
+<h3 id="cfg-regles">Règles</h3>
+<table>
+  <tr><th>Réglage</th><th>Effet</th></tr>
+  <tr><td>Passes avant la fin</td><td>Nombre de passes consécutives de chaque joueur qui terminent la partie.</td></tr>
+  <tr><td>Prime de Scrabble</td><td>Prime quand toutes les lettres du chevalet sont posées en un coup (50 en classique).</td></tr>
+  <tr><td>Bonus par tuile supplémentaire</td><td>Pour les formules à plus de 7 lettres sur le chevalet.</td></tr>
+  <tr><td>Bonus de fin de partie</td><td>Prime au joueur qui termine.</td></tr>
+  <tr><td>Pénalité pour joker restant</td><td>Pénalité par joker resté sur le chevalet en fin de partie.</td></tr>
+  <tr><td>Ajouter les lettres des adversaires</td><td>Le joueur qui vide son chevalet reçoit la valeur des lettres restées chez les autres (§5.1.1).</td></tr>
+  <tr><td>Retirer les lettres restantes</td><td>Chaque joueur perd la valeur de ses lettres restantes.</td></tr>
+  <tr><td>Échange compté comme passe</td><td>Un échange compte comme une passe.</td></tr>
+  <tr><td>Cambio Secco</td><td>Autorise l'échange complet une fois par partie.</td></tr>
+  <tr><td>Indices par partie</td><td>De 0 à 20 (3 par défaut). 0 désactive le bouton Indice.</td></tr>
+  <tr><td>Niveau de l'ordinateur</td><td>Débutant, Intermédiaire, Avancé, Maître (voir <a href="#ordinateur">§6</a>).</td></tr>
+</table>
+
+<h3 id="cfg-temps">Temps</h3>
+<table>
+  <tr><th>Réglage</th><th>Effet</th></tr>
+  <tr><td>Contrôle du temps</td><td>Sans limite, par coup ou par partie (pendule).</td></tr>
+  <tr><td>Fin sur temps écoulé</td><td>Le joueur sans temps passe automatiquement (§5.1.3).</td></tr>
+  <tr><td>Pénalité sur temps écoulé</td><td>« Acheter » une minute contre des points, un nombre limité de fois.</td></tr>
+  <tr><td>Partie perdue après le dernier dépassement</td><td>Le score du joueur est mis à zéro.</td></tr>
+</table>
+<div class="note"><p><strong>Temps épuisé (pendule par partie).</strong> Les tuiles posées au moment où le temps s'écoule reviennent au chevalet (§4.5). Le joueur passe ensuite automatiquement à chacun de ses tours, mais seulement après la période de contestation : il peut donc encore contester le dernier coup. Ses adversaires ne peuvent plus échanger de lettres. Un message l'annonce une seule fois.</p></div>
+
+<h3 id="cfg-verif">Vérification des mots</h3>
+<table>
+  <tr><th>Mode</th><th>Fonctionnement</th></tr>
+  <tr><td>Reprise</td><td>Le jeu vérifie le coup et demande confirmation si un mot est inconnu.</td></tr>
+  <tr><td>Sondage</td><td>Tous les joueurs du groupe confirment un mot absent du dictionnaire.</td></tr>
+  <tr><td>Contestation</td><td>Un joueur doit contester le coup pendant la <em>période</em> (en secondes). Pénalité si le mot est accepté, bonus s'il est refusé ; la pénalité peut être multipliée par le nombre de mots contestés à tort.</td></tr>
+</table>
+
+<h3 id="cfg-langue">Langue</h3>
+<p>Télécharger, charger ou supprimer une traduction de l'interface. Les textes ajoutés dans cette version (coach, indice, sanctions, feuille de match…) sont déjà traduits en français.</p>
+
+<h2 id="aides">6. Aides au jeu</h2>
+
+<h3 id="indice">Indice</h3>
+<p>Le bouton <em>Indice (n)</em> à côté du chevalet, ou <span class="menu">Partie &gt; Indice</span>, fonctionne en deux temps :</p>
+<ol class="steps">
+  <li>Premier indice du tour : la valeur d'un bon coup, le nombre de tuiles qu'il utilise et sa première case, encadrée en jaune.</li>
+  <li>Deuxième indice du même tour : le mot, avec toutes ses cases encadrées.</li>
+</ol>
+<p>Chaque indice compte, dans la limite fixée dans <span class="menu">Règles &gt; Indices par partie</span>. Les indices sont proposés dans une partie 2D hors réseau, quand c'est le tour d'un joueur humain.</p>
+
+<h3 id="ordinateur">Niveaux de l'ordinateur</h3>
+<table>
+  <tr><th>Niveau</th><th>Jeu</th></tr>
+  <tr><td>Débutant</td><td>Des coups ordinaires.</td></tr>
+  <tr><td>Intermédiaire</td><td>Un des meilleurs coups.</td></tr>
+  <tr><td>Avancé</td><td>Tient compte aussi des lettres qu'il garde.</td></tr>
+  <tr><td>Maître</td><td>Le meilleur équilibre entre points et lettres gardées, et il évite d'ouvrir à l'adversaire les cases « mot compte double ou triple ».</td></tr>
+</table>
+
+<h3 id="coach">Coach IA</h3>
+<p>Le coach explique les meilleurs coups et donne la définition des mots joués. Il ne fait que conseiller : <strong>seul le dictionnaire décide si un mot est valide</strong>.</p>
+<ol class="steps">
+  <li>Obtenez une clé d'API chez l'un des services : <strong>Groq</strong> (par défaut), <strong>Gemini</strong>, <strong>Anthropic</strong> ou <strong>OpenCode</strong>.</li>
+  <li><span class="menu">Configuration &gt; Coach IA...</span> : choisissez le service, collez la clé, changez le modèle si besoin, puis <em>Enregistrer</em>.</li>
+  <li>À la première demande, le jeu vous demande votre accord pour envoyer le plateau, votre chevalet et les meilleurs coups au service choisi. Rien n'est envoyé tant que vous ne sollicitez pas le coach.</li>
+  <li>Utilisez <span class="menu">Partie &gt; Coach : expliquer les meilleurs coups</span> ou <span class="menu">Coach : définir les derniers mots</span>. Les réponses s'affichent dans l'onglet Coach.</li>
+</ol>
+<p>Dans l'onglet Coach, deux options :</p>
+<ul>
+  <li><strong>Conseil à chacun de mes tours</strong> : le coach analyse votre chevalet au début de votre tour.</li>
+  <li><strong>Noter mon meilleur coup à chaque tour</strong> : nécessaire au bilan de partie. Rien ne s'affiche pendant la partie.</li>
+</ul>
+<div class="note"><p><strong>Sécurité des clés.</strong> Sous Windows, les clés sont chiffrées dans le gestionnaire d'identifiants de Windows (« Scrabble3D coach/… »), et non en clair dans <code>coach.ini</code>. Une clé d'une version précédente y est déplacée automatiquement. <em>Supprimer la clé enregistrée</em> l'efface aussi du gestionnaire.</p></div>
+<div class="warn"><p>Le service peut facturer l'utilisation de votre clé. Gemini est parfois lent ou saturé ; OpenCode demande des crédits ou un abonnement. Le message d'erreur du service s'affiche dans l'onglet Coach.</p></div>
+
+<h3 id="bilan">Bilan de partie</h3>
+<p>Une fois la partie terminée, <span class="menu">Partie &gt; Bilan de partie</span> compare chacun de vos coups au meilleur coup possible à ce tour, dans l'onglet Coach. Il faut avoir activé <em>Noter mon meilleur coup à chaque tour</em> pendant la partie. Un coup défensif, volontairement moins payant, y apparaît comme une perte.</p>
+
+<h2 id="arbitrage">7. Arbitrage et fin de partie</h2>
+<h3>Sanctions (§6.4)</h3>
+<p><span class="menu">Partie &gt; Sanction...</span> : choisissez le joueur et décrivez l'infraction. Le dialogue annonce la sanction qui s'applique. Le barème est compté par joueur :</p>
+<table>
+  <tr><th>Infraction</th><th>Sanction</th></tr>
+  <tr><td>1re</td><td>Rappel du règlement</td></tr>
+  <tr><td>2e (1re récidive)</td><td>5 points de pénalité</td></tr>
+  <tr><td>3e</td><td>50 points de pénalité</td></tr>
+  <tr><td>4e</td><td>Match perdu : score mis à 0, fin de la partie</td></tr>
+</table>
+<p>Chaque sanction est annoncée dans les messages et reprise sur la feuille de match. Les compteurs repartent à zéro à chaque nouvelle partie.</p>
+
+<h3>Abandon (§4.11)</h3>
+<p><span class="menu">Partie &gt; Abandonner</span> (deux joueurs, au moins un coup joué) : l'adversaire doit donner son accord. Scores retenus : si l'écart est d'au plus 100 points, 350 pour celui qui abandonne et au moins 450 pour le gagnant ; sinon, chacun garde son score, avec au moins 450 pour le gagnant.</p>
+
+<h3>Décompte de fin de partie</h3>
+<p>La partie s'arrête quand un joueur vide son chevalet et que le sac est vide, ou après le nombre de passes consécutives fixé. Chaque joueur perd la valeur de ses lettres restantes. Seul le joueur qui a vidé son chevalet reçoit la valeur des lettres de ses adversaires : une partie finie par des passes ne fait que retirer des points. Le message de fin rappelle les scores, l'écart plafonné à 100 points et la liste des jokers joués.</p>
+
+<h2 id="feuille">8. Feuille de match</h2>
+<p><span class="menu">Partie &gt; Exporter la feuille de match...</span>, puis choisissez le format avec l'extension du fichier :</p>
+<div class="cards">
+  <div class="card"><strong>PDF</strong><span>À imprimer et à signer.</span></div>
+  <div class="card"><strong>CSV</strong><span>Pour un tableur (séparateur point-virgule, accents conservés).</span></div>
+  <div class="card"><strong>Page web</strong><span>Un fichier HTML lisible dans un navigateur.</span></div>
+</div>
+<p>La feuille contient chaque coup avec le cumul du joueur, les ajustements de fin de partie, les scores finaux, l'écart plafonné à 100 points (§5.3), le vainqueur, les jokers avec la lettre représentée (§1.1.5), les sanctions et leur motif, et une ligne de signature par joueur.</p>
+
+<h2 id="dictionnaire">9. Dictionnaire et mises à jour</h2>
+<h3>Recherche de mots</h3>
+<p><span class="menu">Configuration &gt; Recherche de mots</span> : l'onglet <em>Rechercher</em> vérifie un mot et affiche sa catégorie et son sens ; l'onglet <em>Motif</em> trouve les mots qu'on peut former avec des lettres données.</p>
+<h3>Importer une liste de mots</h3>
+<p><span class="menu">Configuration &gt; Importer une liste de mots...</span> ajoute au dictionnaire en cours les mots d'un fichier texte (un mot par ligne, par exemple une nouvelle édition de l'ODS). Les accents et les ligatures sont retirés, et les lignes inutilisables sont ignorées. L'ancien dictionnaire est sauvegardé (<code>.bak-date</code>) et le rapport s'affiche dans les messages.</p>
+<h3>Mises à jour</h3>
+<p><span class="menu">Aide &gt; Rechercher des mises à jour</span> lit la liste officielle du serveur. Le jeu propose alors les dictionnaires et traductions plus récents, ou annonce que tout est à jour. Il fait aussi cette vérification seul une fois par semaine.</p>
+<div class="note"><p>Vos mots importés sont gardés à part, dans <code>&lt;dictionnaire&gt;.imported.txt</code>. Quand une nouvelle édition officielle remplace le dictionnaire, ils y sont ajoutés de nouveau automatiquement.</p></div>
+
+<h2 id="reseau">10. Jeu en réseau</h2>
+<ol class="steps">
+  <li><span class="menu">Partie &gt; Se connecter au serveur de jeu</span> : saisissez le serveur (par défaut <code>scrabble3d.ignorelist.com:5001</code>), votre nom, votre mot de passe, votre adresse e-mail, votre pays et votre ville.</li>
+  <li>Formez un groupe en invitant des joueurs depuis l'onglet Joueurs. Discutez avec le champ de saisie sous les onglets (<code>/help</code> pour l'aide).</li>
+  <li>Celui qui lance la partie envoie sa configuration à tout le groupe ; les autres l'acceptent.</li>
+</ol>
+<table>
+  <tr><th>Adresse</th><th>Connexion</th></tr>
+  <tr><td><code>hôte</code>, <code>hôte:port</code>, <code>tcp://hôte:port</code></td><td>En clair, comme le serveur public actuel : n'utilisez pas un mot de passe qui sert ailleurs.</td></tr>
+  <tr><td><code>tls://hôte:port</code></td><td>Chiffrée (TLS). Rien n'est envoyé avant la poignée de main ; un certificat invalide ou un serveur sans TLS est refusé. Il faut un serveur ou un relais (stunnel, par exemple) qui propose TLS.</td></tr>
+</table>
+<p>Si <strong>tous les joueurs du groupe</strong> ont cette version, l'abandon avec accord de l'adversaire et le tirage au sort du premier joueur fonctionnent aussi en réseau. Face à une version plus ancienne, ces deux fonctions restent inactives et la partie se déroule comme avant.</p>
+
+<h2 id="fichiers">11. Fichiers et données</h2>
+<table>
+  <tr><th>Emplacement (Windows)</th><th>Contenu</th></tr>
+  <tr><td><code>%LOCALAPPDATA%\Scrabble3D\4\</code></td><td>Configuration (<code>Scrabble3D.ini</code>), dictionnaires (<code>.dic</code>), traductions, réglages du coach (<code>coach.ini</code>, sans les clés) et du son (<code>sound.ini</code>).</td></tr>
+  <tr><td>Gestionnaire d'identifiants de Windows</td><td>Clés d'API du coach (« Scrabble3D coach/&lt;service&gt;/… »).</td></tr>
+  <tr><td>Où vous voulez</td><td>Parties enregistrées (<code>.ssg</code>), feuilles de match (<code>.pdf</code>, <code>.csv</code>, <code>.html</code>).</td></tr>
+</table>
+<p>Pour repartir de zéro, fermez le jeu et renommez le dossier <code>%LOCALAPPDATA%\Scrabble3D\4</code>.</p>
+
+<h2 id="depannage">12. Dépannage</h2>
+<table>
+  <tr><th>Problème</th><th>Solution</th></tr>
+  <tr><td>« Dictionnaire non disponible »</td><td>Acceptez le téléchargement, ou chargez-le dans Configuration &gt; Dictionnaire.</td></tr>
+  <tr><td>Le jeu refuse un mot qui existe</td><td>Vérifiez-le avec la recherche de mots ; importez une liste plus récente si besoin. Le coach ne valide jamais un mot.</td></tr>
+  <tr><td>Le coach ne répond pas</td><td>Vérifiez la clé et le service dans Configuration &gt; Coach IA. Lisez le message d'erreur dans l'onglet Coach (quota, crédits, service saturé).</td></tr>
+  <tr><td>Les clés ont « disparu » après être revenu à une ancienne version</td><td>Elles sont dans le gestionnaire d'identifiants : resaisissez-les dans l'ancienne version, ou repassez à la version actuelle.</td></tr>
+  <tr><td>Le bouton Indice est grisé</td><td>Plus d'indice dans cette partie, partie en 3D ou en réseau, ou c'est le tour de l'ordinateur.</td></tr>
+  <tr><td>Connexion <code>tls://</code> refusée</td><td>Le serveur ne propose pas TLS, ou son certificat n'est pas valide. Utilisez l'adresse sans préfixe pour le serveur public.</td></tr>
+  <tr><td>Le paquet ne démarre pas sur un autre PC</td><td>Copiez tout le dossier <code>Scrabble3D</code> issu du zip, pas seulement l'exécutable.</td></tr>
+</table>
+
+<footer>Guide d'utilisation de Scrabble3D (version 4.0.13). Les paragraphes (§) renvoient au Règlement international du Scrabble classique.</footer>
+</main>
+</div>
+</body>
+</html>

@@ -30,6 +30,14 @@ $env:PATH = "$QtDir\bin;$MinGWDir\bin;$env:PATH"
 $version = "dev"
 $pro = Get-Content (Join-Path $root "QScrabble.pro") -Raw
 if ($pro -match "(?m)^\s*VERSION\s*=\s*([0-9.]+)") { $version = $Matches[1] }
+else {
+    # otherwise the version shown by the game (version.h: VERSION_MAJOR, VERSION_MINOR, VERSION_BUILD)
+    $vh = Get-Content (Join-Path $root "version.h") -Raw
+    if ($vh -match "VERSION_MAJOR\s+(\d+)" ) { $major = $Matches[1] }
+    if ($vh -match "VERSION_MINOR\s+(\d+)" ) { $minor = $Matches[1] }
+    if ($vh -match "VERSION_BUILD\s+(\d+)" ) { $build = $Matches[1] }
+    if ($major -and $minor -and $build) { $version = "$major.$minor.$build" }
+}
 
 if (-not $SkipBuild) {
     New-Item -ItemType Directory -Force $BuildDir | Out-Null
