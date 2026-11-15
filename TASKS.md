@@ -39,7 +39,10 @@
   les compteurs repartent à zéro à chaque nouvelle partie. Pas en partie réseau. Les sanctions ne sont pas
   enregistrées avec la partie sauvegardée.
 - [ ] 7 bis. Export de la feuille de match (PDF ou CSV) — laissé de côté pour l'instant.
-- [ ] 8. Déclaration du joker avec la lettre représentée, notée sur la feuille de match (§3.1.4).
+- [x] **8. Déclaration du joker (§3.1.4).** Le sélecteur oblige déjà à choisir la lettre du joker ; chaque joker
+  posé est maintenant annoncé (« X joue un joker comme S dans LYSEZ (H10) ») et noté avec le coup, le joueur et
+  la case. En fin de partie (normale, abandon ou match perdu), le relevé des jokers suit la feuille de match. Un
+  coup retiré après contestation retire aussi ses jokers.
 
 ### Coach et dictionnaire
 - [ ] 9. Onglet Coach dans la mise en page mobile.

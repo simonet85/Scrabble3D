@@ -274,6 +274,39 @@ QString GamePlay::matchSheet() const
             .arg(qMin(qAbs(a - b), 100));
 }
 
+void GamePlay::announceJokers()
+{
+    const sharedMove aMove = m_pMoves.last();
+    for (int i = 0; i < aMove->letterCount(); i++) {
+        const Letter l = aMove->getLetter(i);
+        if (!l.IsJoker)
+            continue;
+        JokerEntry e;
+        e.move = m_nCurrentMove + 1;
+        e.player = int(m_nCurrentPlayer);
+        e.letter = replaceAllLetters(l.What);
+        e.word = replaceAllLetters(aMove->PlacedWord);
+        if (!m_pBoard->is3D())
+            e.square = QString(QChar('A' + l.Point.y())) + QString::number(l.Point.x() + 1);
+        m_lJokers.append(e);
+        //: %1 = player, %2 = letter of the joker, %3 = word, %4 = square
+        m_pMsgModel->addMessage(tr("%1 plays a joker as %2 in %3 (%4).")
+                                    .arg(m_lPlayerNames[m_nCurrentPlayer], e.letter, e.word, e.square),
+                                m_lPlayerNames[m_nCurrentPlayer]);
+    }
+}
+
+QString GamePlay::jokerSheet() const
+{
+    if (m_lJokers.isEmpty())
+        return QString();
+    QStringList items;
+    for (const JokerEntry &e : m_lJokers)
+        //: one joker of the end of game report: %1 = letter, %2 = word, %3 = move, %4 = player
+        items.append(tr("%1 in %2 (move %3, %4)").arg(e.letter, e.word).arg(e.move).arg(m_lPlayerNames.value(e.player)));
+    return tr("Jokers of the game: %1.").arg(items.join(QStringLiteral(", ")));
+}
+
 QString GamePlay::drawFirstPlayer(const QVariantList &aLetterList, long nSeed)
 {
     // FISF 2.1: each player draws a letter, the one closest to A starts; jokers don't count and
@@ -360,6 +393,8 @@ void GamePlay::resign()
     m_pMsgModel->addMessage(tr("%1 resigns, %2 wins the game.")
                                 .arg(m_lPlayerNames[nLoser], m_lPlayerNames[nWinner]));
     m_pMsgModel->addMessage(matchSheet());
+    if (!jokerSheet().isEmpty())
+        m_pMsgModel->addMessage(jokerSheet());
 
     m_bIsRunning = false;
     emit isRunningChanged();
@@ -380,6 +415,7 @@ void GamePlay::startNewGame(QVariantMap gameConfig)
         m_nHintTurn = -1;
         m_nInfractions.clear();
         m_lSanctions.clear();
+        m_lJokers.clear();
         emit sanctionsChanged();
         m_nHintLevel = 0;
         m_pBoardModel->clearHint();
@@ -593,6 +629,10 @@ void GamePlay::nextPlayer(const bool bIsLoading)
                                          , !m_pMoves.last()->ConnectedWords.isEmpty() ? tr("and") + " " + m_pMoves.last()->ConnectedWords : ""
                                          , QString::number(m_pMoves.last()->Value())) ,
                                 m_lPlayerNames.at(m_nCurrentPlayer));
+
+    // FISF 3.1.4: the letter a joker stands for is announced and noted
+    if ((!bIsLoading) && !m_pMoves.last()->PlacedWord.isEmpty())
+        announceJokers();
 
     // all pieces of the rack placed at once: announce the Scrabble (FISF 3.1.2c)
     if ((!bIsLoading) && m_pMoves.last()->isScrabble())
@@ -813,6 +853,8 @@ void GamePlay::doGameEnd()
         m_pMsgModel->addMessage(sWinner);
     if (m_nPlayerCount == 2)
         m_pMsgModel->addMessage(matchSheet());
+    if (!jokerSheet().isEmpty())
+        m_pMsgModel->addMessage(jokerSheet());
 
     //network
     if (m_bIsConnected) {
@@ -1027,6 +1069,9 @@ void GamePlay::rollbackLastMove()
     const int nLastPlayer = (m_nCurrentMove - 1) % m_nPlayerCount;
     m_pMoves[m_pMoves.count() - 2]->clear();
     m_pGameCourseModel->clearLastMove();
+    for (int i = int(m_lJokers.count()) - 1; i >= 0; i--)
+        if (m_lJokers[i].move == m_nCurrentMove) // the move taken back is the previous one (moves are counted from 1)
+            m_lJokers.removeAt(i);
 
     Letter boardLetter;
     Letter rackLetter;

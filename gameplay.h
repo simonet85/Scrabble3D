@@ -428,6 +428,10 @@ private:
     int scrabbleBonusFor(const int nPlaced) const;
     int wordCount(const sharedMove &aMove) const;
     QString matchSheet() const;               // two player result with the difference limited to 100 points (FISF 5.3)
+    struct JokerEntry { int move = 0; int player = 0; QString letter; QString word; QString square; };
+    QList<JokerEntry> m_lJokers;              // jokers of this game and the letter each one stands for (FISF 3.1.4)
+    void announceJokers();                    // called for a move that has been placed
+    QString jokerSheet() const;               // the jokers of the game, for the end of game report
     struct SanctionEntry { int move = 0; int player = 0; QString reason; int level = 0; int points = 0; };
     QList<int> m_nInfractions;                // infractions per player in this game (FISF 6.4)
     QList<SanctionEntry> m_lSanctions;        // sanctions of this game, for the match sheet
