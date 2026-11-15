@@ -325,7 +325,10 @@ private:
     QString getPlacedWords();
     bool getPlacedValid();
     int getExchangeCount() { return m_pRackModel->exchangeNumber(); }
-    bool getCanExchange() { return m_lBag.count() >= m_pRackModel->rackSize(); } // rule 3.3: at least 7 tiles in the bag
+    bool getCanExchange(); // rule 3.3: at least 7 tiles in the bag; rule 5.1.3: not when an opponent is out of time
+    bool playerOutOfTime(int nPlayer);        // time control per game: the player has used all of the time
+    QSet<int> m_outOfTimeTold;                // players told that they are out of time in this game
+    void autoPassOutOfTime(int nMove);        // the out of time player passes once the challenge period is over
     bool canEditRack() { return m_bIsRunning && !m_bIsHistory && !m_bIsComputing && getIsLocalPlayer(); }
     void doComputeMove();
     void resetPieces(); //removeLetter(*)

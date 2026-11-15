@@ -26,8 +26,13 @@
   complète la traduction téléchargée sans la remplacer (`frenchsupplement`).
 
 ### Règlement FISF 2026 (restant)
-- [ ] 6. Temps épuisé (§5.1.3) : le joueur sans temps passe automatiquement mais peut encore contester ; son adversaire ne
-  peut plus changer ses lettres.
+- [x] **6. Temps épuisé (§5.1.3).** En temps par partie, le joueur qui n'a plus de temps passe automatiquement à
+  chacun de ses tours, après la période de contestation du dernier coup (il peut donc encore contester). Un message
+  l'annonce une seule fois. Ses adversaires ne peuvent plus échanger de lettres (l'ordinateur non plus). Les tuiles
+  posées au moment où le temps s'écoule sont rendues au chevalet (§4.5). En fin de partie, la valeur des chevalets
+  adverses n'est ajoutée qu'au joueur qui a vidé son chevalet (§5.1.1) ; une partie finie par des passes ne fait que
+  retirer à chacun la valeur de son chevalet. Corrigé aussi : un minuteur en double pouvait faire compter le temps
+  deux fois.
 - [ ] 7. Barème de sanctions (§6.4) et export de la feuille de match (PDF ou CSV).
 - [ ] 8. Déclaration du joker avec la lettre représentée, notée sur la feuille de match (§3.1.4).
 
