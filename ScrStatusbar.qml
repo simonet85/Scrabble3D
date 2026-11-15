@@ -189,7 +189,7 @@ RowLayout {
 
             color: config.myPalette.window
             shadowColor: config.bColoredPlayers
-                         ? Qt.lighter(config.playercolors.get(index).itemColor)
+                         ? Qt.lighter(config.playerColor(index))
                          : "transparent"
             // name + current score; the winner(s) are marked once the game is over
             property int score: GamePlay.statTotal[index] ?? 0

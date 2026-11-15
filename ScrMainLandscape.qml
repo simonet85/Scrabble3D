@@ -73,6 +73,7 @@ ColumnLayout {
         Menu {
             id: helpMenu
             title: qsTr("&Help")
+            LongMenuItem { action: acUpdate }
             LongMenuItem { action: acAbout }
 //            LongMenuItem { action: acDemo } // testing purpose
         }

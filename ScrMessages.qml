@@ -35,7 +35,7 @@ TableView {
         id: delegateRect
         implicitHeight: msgText.height + 2
         color: who > -1
-               ? Qt.lighter(config.playercolors.get(who).itemColor)
+               ? Qt.lighter(config.playerColor(who))
                : config.myPalette.window
         Text {
             id: msgText

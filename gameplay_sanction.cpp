@@ -66,6 +66,8 @@ void GamePlay::sanction(int player, const QString &reason)
         }
         if (!matchSheet().isEmpty())
             m_pMsgModel->addMessage(matchSheet());
+        if (!jokerSheet().isEmpty())
+            m_pMsgModel->addMessage(jokerSheet());
         m_bIsRunning = false;
         emit isRunningChanged();
         emit statInfoChanged();

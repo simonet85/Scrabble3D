@@ -50,6 +50,14 @@ Window {
 
     property alias colors: scrColors
     property alias playercolors: scrPlayerColors
+    // the colours may be read before Component.onCompleted has filled the models: a neutral colour until then;
+    // reading count makes the bindings update once the models are filled
+    function fieldColor(index) {
+        return (index >= 0 && index < scrColors.count) ? scrColors.get(index).itemColor : "#d8d8d8"
+    }
+    function playerColor(index) {
+        return (index >= 0 && index < scrPlayerColors.count) ? scrPlayerColors.get(index).itemColor : "#d8d8d8"
+    }
     property var board: []
 
     property alias myPalette: myPalette

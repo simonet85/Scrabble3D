@@ -298,8 +298,9 @@ ApplicationWindow {
     }
     Action {
         id: acUpdate
-        text: "Check for updates" // testing only
-        onTriggered: GamePlay.checkForUpdates()
+        text: qsTr("Check for updates")
+        enabled: !GamePlay.isConnected
+        onTriggered: GamePlay.checkForUpdatesNow()
     }
     Action {
         id: acDemo
