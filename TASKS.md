@@ -57,7 +57,14 @@
   `coach.ini` y est déplacée à sa première lecture. Les autres systèmes gardent `coach.ini`.
 
 ### Réseau et technique
-- [ ] 12. Connexion chiffrée au serveur ; abandon et tirage au sort en partie réseau.
+- [x] **12. Réseau : TLS en option, abandon et tirage au sort.** Une adresse `tls://hôte:port` ouvre une connexion
+  chiffrée (rien n'est envoyé avant la poignée de main TLS ; un certificat invalide ou un serveur sans TLS est
+  refusé). Sans préfixe, la connexion reste en clair : le serveur public actuel ne propose pas TLS, il faut un
+  serveur ou un relais (stunnel) qui le fasse. L'abandon (§4.11, avec l'accord de l'adversaire) et le tirage au
+  sort du premier joueur (§2.1, même graine sur chaque client) marchent en réseau quand tous les joueurs du groupe
+  ont cette version (release « 4.0.13-fisf1_<OS> ») ; face à une ancienne version, rien ne change. Le serveur
+  relaie déjà les messages d'un type inconnu au groupe (code de ScrabbleServer, dépôt Scrabble3D/3.1). Non testé
+  sur le serveur public : la poignée de main est testée en local.
 - [x] **13. Paquet Windows.** `deploy\package-windows.ps1` compile en release, rassemble Qt avec `windeployqt`
   dans `dist\Scrabble3D\` (110 Mo) et en fait un zip (40 Mo) qui se lance sans Qt installé. Si Inno Setup 6 est
   installé, il produit aussi `Scrabble3D-<version>-setup.exe` (`deploy\scrabble3d.iss`, en français et anglais).

@@ -66,6 +66,8 @@ void GamePlay::connect(QString name, QString password, QString email, QString co
     // 5. if wcPoll checkMove() and challengeWord() are sent later
     QObject::connect(m_pNetwork, SIGNAL(onNextPlayer(QVariantMap)),
                      this, SLOT(doNetworkNextPlayer(QVariantMap)));
+    QObject::connect(m_pNetwork, SIGNAL(onResign(QVariantMap)),
+                     this, SLOT(doNetworkResign(QVariantMap)));
     QObject::connect(m_pNetwork, SIGNAL(onCambioSecco()),
                      this, SLOT(doCambioSecco()));
     QObject::connect(m_pNetwork, SIGNAL(onChallengeMove(QString)),
@@ -82,7 +84,9 @@ void GamePlay::connect(QString name, QString password, QString email, QString co
     QObject::connect(this, SIGNAL(onSend(network::MessageType,QString,QString)),
                      m_pNetwork, SLOT(doSend(network::MessageType,QString,QString)));
 
-    m_pNetwork->connect(address.host, address.port);
+    m_pNetwork->connect(address.host, address.port, address.encrypted);
+    if (address.encrypted)
+        addMessage(tr("Encrypted connection (TLS) requested."));
 
     m_bIsRunning = false; // cancel running game
     emit isRunningChanged();
@@ -232,6 +236,8 @@ void GamePlay::syncNewGame(QVariantMap aConfig)
 
     //seed for equal randomization
     configData.append("seed="+QString::number(time(0)));
+    // FISF 2.1: the letter draw decides who starts, when every client of the group can do it
+    configData.append(QStringLiteral("drawFirst=") + (networkFeaturesAvailable() ? "true" : "false"));
     //share with group
     emit onSend(network::nwSyncNewGame, "group", configData.join("\a"));
 }
@@ -654,4 +660,38 @@ void GamePlay::doNetworkLogin(QVariantMap aMsg)
 void GamePlay::syncCambioSecco()
 {
     emit onSend(network::nwCambioSecco, "group", "");
+}
+
+// FISF 4.11 in network games: the resigning player asks, the opponent agrees or not,
+// then every client of the group applies the same final scores
+void GamePlay::doNetworkResign(QVariantMap aMsg)
+{
+    if (!m_bIsRunning || !m_pNetwork)
+        return;
+    const QString sender = aMsg["Sender"].toString();
+    const QString local = m_pNetwork->localPlayerName();
+    if (aMsg["Step"].toString() == QLatin1String("ask")) {
+        if (sender == local)
+            return; // own request, sent back by the server
+        QMessageBox msgBox;
+        msgBox.setWindowTitle("Scrabble3D");
+        msgBox.setText(tr("%1 resigns.").arg(sender));
+        msgBox.setInformativeText(tr("%1, do you agree?").arg(local));
+        msgBox.setIcon(QMessageBox::Question);
+        msgBox.setStandardButtons(QMessageBox::Yes | QMessageBox::No);
+        const bool agree = msgBox.exec() == QMessageBox::Yes;
+        emit onSend(network::nwResign, "group",
+                    QStringLiteral("Step=answer\aLoser=") + sender + QStringLiteral("\aAnswer=") + (agree ? "true" : "false"));
+        return;
+    }
+    if (aMsg["Step"].toString() == QLatin1String("answer")) {
+        const QString loser = aMsg["Loser"].toString();
+        if (aMsg["Answer"].toString() != QLatin1String("true")) {
+            m_pMsgModel->addMessage(tr("%1 does not agree: the game continues.").arg(sender));
+            return;
+        }
+        const int nLoser = int(m_lPlayerNames.indexOf(loser));
+        if (nLoser >= 0)
+            finishResign(uint(nLoser));
+    }
 }

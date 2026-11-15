@@ -15,13 +15,31 @@ network::network(QObject* parent, const QString name, const QString password, co
     this->setSocketOption(QAbstractSocket::KeepAliveOption, 1);
 }
 
-void network::connect(const QString sHostname, const uint iPort)
+void network::connect(const QString sHostname, const uint iPort, const bool bEncrypted)
 {
-    QObject::connect(this, SIGNAL(connected()),
-                     this, SLOT(doConnected()));
+    m_bEncrypted = bEncrypted;
     QObject::connect(this, SIGNAL(readyRead()),
                      this, SLOT(doReadyRead()));
-    this->connectToHost(sHostname, iPort);
+    if (bEncrypted) {
+        // nothing is sent before the TLS handshake has succeeded: the login data never travel in clear
+        QObject::connect(this, &QSslSocket::encrypted, this, &network::doConnected);
+        QObject::connect(this, &QSslSocket::sslErrors, this, &network::doSslErrors);
+        this->connectToHostEncrypted(sHostname, quint16(iPort));
+    } else {
+        QObject::connect(this, SIGNAL(connected()),
+                         this, SLOT(doConnected()));
+        this->connectToHost(sHostname, iPort);
+    }
+}
+
+void network::doSslErrors(const QList<QSslError> &errors)
+{
+    // a certificate that cannot be verified ends the connection (no silent acceptance)
+    QStringList texts;
+    for (const QSslError &e : errors)
+        texts.append(e.errorString());
+    emit onDisconnect(tr("Secure connection refused: %1").arg(texts.join(QStringLiteral("; "))));
+    this->abort();
 }
 
 void network::doSend(const MessageType msgType, QString msgReceiver, QString msgText)
@@ -72,7 +90,7 @@ void network::doConnected()
     lData.append("City=" + m_sCity);
     lData.append("UID="); //TODO: network: mac address
     lData.append("Email=" + m_sEmail);
-    lData.append("Release=" + version::current() + "_" + sOS); //v3.1 uses underscore to separate platform
+    lData.append("Release=" + version::current() + "-" + version::networkFeatures() + "_" + sOS); //v3.1 uses underscore to separate platform
 
     doSend(nwConnect, m_sName, lData.join("\a"));
 }
@@ -160,6 +178,7 @@ void network::doReadyRead()
         case nwChallenge: emit onChallengeResult(aLastMessage); break;
         case nwRemoteGames: emit onRemoteGames(aLastMessage); break;
         case nwBestValues: break; //TODO: network: bestvalues into gamecourse
+        case nwResign: emit onResign(aLastMessage); break;
         case nwGameResult: {
             if (aLastMessage["Sender"] == m_sName)
                 emit onGameResult(aLastMessage["OldRating"].toInt(), aLastMessage["NewRating"].toInt());

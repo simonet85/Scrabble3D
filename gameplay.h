@@ -210,7 +210,9 @@ public:
     void setCoachAutoAdvice(bool on);
     QString coachServiceLabel(); // "Groq - openai/gpt-oss-120b"
     Q_INVOKABLE void coachDefine();  // short definitions of the words of the last move
-    Q_INVOKABLE bool canResign() const { return m_bIsRunning && !m_bIsConnected && !m_bIsHistory && m_nPlayerCount == 2 && m_nCurrentMove > 0; } // game course must have at least one move
+    Q_INVOKABLE bool canResign(); // two players, at least one move; in network games when the whole group can handle it
+    Q_INVOKABLE bool networkFeaturesAvailable(); // all players of the network group know the resignation and the draw
+    void finishResign(uint nLoser);           // final scores of FISF 4.11 and end of the game
     Q_INVOKABLE void resign(); // FISF 4.11: "J'abandonne", opponent has to agree
     Q_INVOKABLE void sanction(int player, const QString &reason); // FISF 6.4: graded sanction of an infraction
     Q_INVOKABLE QString nextSanction(int player);  // what the next infraction of the player leads to
@@ -295,6 +297,7 @@ public slots:
     void doNetworkGameResult(int oldRating, int newRating);
     void doNetworkChallengeMove(QString aSender);
     void doNetworkChallengeResult(QVariantMap aMsg);
+    void doNetworkResign(QVariantMap aMsg);
     void doNetworkSyncChallengeWord();
 
     void doDictionaryLoadingFinished(QString aFileName);

@@ -28,6 +28,10 @@ class version
 public:
     version() {};
 
+    // added to the release sent to the server: the players of a group who all have it can use the
+    // resignation and the draw of the first player in network games (older clients ignore these messages)
+    static QString networkFeatures() { return QStringLiteral("fisf1"); }
+
     static QString current() {
         return QString::number(VERSION_MAJOR) + "." +
                QString::number(VERSION_MINOR) + "." +

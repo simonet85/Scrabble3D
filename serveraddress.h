@@ -12,6 +12,7 @@ inline const char *DefaultServer = "scrabble3d.ignorelist.com:5001";
 struct Address {
     QString host;
     uint port = DefaultPort;
+    bool encrypted = false; // tls:// or ssl://: TLS connection (the server or a proxy must offer it)
     bool valid = false;
 };
 
@@ -21,6 +22,10 @@ inline Address parse(const QString &text)
     QString s = text.trimmed();
     if (s.startsWith(QStringLiteral("tcp://"), Qt::CaseInsensitive))
         s = s.mid(6);
+    else if (s.startsWith(QStringLiteral("tls://"), Qt::CaseInsensitive) || s.startsWith(QStringLiteral("ssl://"), Qt::CaseInsensitive)) {
+        s = s.mid(6);
+        a.encrypted = true;
+    }
     if (s.endsWith('/'))
         s.chop(1);
     if (s.isEmpty())

@@ -359,6 +359,12 @@ void GamePlay::resign()
     // gap > 100 and winner > 450: both keep score; gap > 100 and winner <= 450: 450 / loser keeps score
     if (!canResign())
         return;
+    if (m_bIsConnected) {
+        // the local player resigns; the opponent is asked on the other side (doNetworkResign)
+        emit onSend(network::nwResign, "group", QStringLiteral("Step=ask"));
+        m_pMsgModel->addMessage(tr("You resign: waiting for the agreement of your opponent."));
+        return;
+    }
     const uint nLoser = m_nCurrentPlayer;
     const uint nWinner = 1 - nLoser;
 
@@ -370,7 +376,27 @@ void GamePlay::resign()
     msgBox.setStandardButtons(QMessageBox::Yes | QMessageBox::No);
     if (msgBox.exec() != QMessageBox::Yes)
         return; //the game continues
+    finishResign(nLoser);
+}
 
+bool GamePlay::networkFeaturesAvailable()
+{
+    return m_bIsConnected && m_pNetwork
+           && m_PlayersTreeModel->groupSupports(m_pNetwork->localPlayerName(), version::networkFeatures());
+}
+
+bool GamePlay::canResign()
+{
+    if (!m_bIsRunning || m_bIsHistory || (m_nPlayerCount != 2) || (m_nCurrentMove <= 0))
+        return false;
+    return !m_bIsConnected || networkFeaturesAvailable();
+}
+
+void GamePlay::finishResign(uint nLoser)
+{
+    if (nLoser > 1)
+        return;
+    const uint nWinner = 1 - nLoser;
     if (m_nTimerID != -1) {
         killTimer(m_nTimerID);
         m_nTimerID = -1;
@@ -434,7 +460,7 @@ void GamePlay::startNewGame(QVariantMap gameConfig)
         std::shuffle(m_lPlayerNames.begin(), m_lPlayerNames.end(), rng);
     }
     QString sDrawMessage;
-    if (gameConfig["DrawFirst"].toBool() && !m_bIsConnected)
+    if (gameConfig["DrawFirst"].toBool()) // in network games every client draws with the same seed and the same names
         sDrawMessage = drawFirstPlayer(gameConfig["LetterList"].toList(), nSeed);
     m_pMsgModel->playerNames(m_lPlayerNames); //to highlight player messages
     emit numberOfPlayersChanged();

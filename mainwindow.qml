@@ -267,7 +267,7 @@ ApplicationWindow {
         text: qsTr("Resign")
         // the properties make the binding re-evaluate; canResign() alone has no change signal
         enabled: GamePlay.isRunning && GamePlay.currentMove >= 0 && GamePlay.numberOfPlayers >= 0
-                 && !GamePlay.isConnected && GamePlay.canResign()
+                 && GamePlay.canResign()
         onTriggered: GamePlay.resign()
     }
     Action {
