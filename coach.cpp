@@ -9,6 +9,7 @@
 #include <QSettings>
 #include <QUrl>
 #include <QUuid>
+#include <QFileInfo>
 
 coach::coach(const QString &settingsPath, QObject *parent)
     : QObject(parent), m_sSettingsPath(settingsPath)
@@ -19,6 +20,88 @@ coach::coach(const QString &settingsPath, QObject *parent)
 static QSettings openSettings(const QString &path)
 {
     return QSettings(path, QSettings::IniFormat);
+}
+
+#ifdef Q_OS_WIN
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+#include <windows.h>
+#include <wincred.h>
+#endif
+
+// one credential per provider and per configuration folder (the test configuration has its own keys)
+QString coach::credentialTarget(const QString &provider) const
+{
+    return QStringLiteral("Scrabble3D coach/") + provider + QStringLiteral("/")
+           + QFileInfo(m_sSettingsPath).absolutePath();
+}
+
+#ifdef Q_OS_WIN
+static QString readCredential(const QString &target)
+{
+    PCREDENTIALW cred = nullptr;
+    if (!CredReadW(reinterpret_cast<LPCWSTR>(target.utf16()), CRED_TYPE_GENERIC, 0, &cred))
+        return QString();
+    const QString value = QString::fromUtf8(reinterpret_cast<const char *>(cred->CredentialBlob), int(cred->CredentialBlobSize));
+    CredFree(cred);
+    return value;
+}
+
+static bool writeCredential(const QString &target, const QString &value)
+{
+    if (value.isEmpty()) {
+        CredDeleteW(reinterpret_cast<LPCWSTR>(target.utf16()), CRED_TYPE_GENERIC, 0);
+        return true;
+    }
+    QByteArray blob = value.toUtf8();
+    const QString user = QStringLiteral("Scrabble3D");
+    CREDENTIALW cred{};
+    cred.Type = CRED_TYPE_GENERIC;
+    cred.TargetName = const_cast<LPWSTR>(reinterpret_cast<LPCWSTR>(target.utf16()));
+    cred.CredentialBlobSize = DWORD(blob.size());
+    cred.CredentialBlob = reinterpret_cast<LPBYTE>(blob.data());
+    cred.Persist = CRED_PERSIST_LOCAL_MACHINE;
+    cred.UserName = const_cast<LPWSTR>(reinterpret_cast<LPCWSTR>(user.utf16()));
+    return CredWriteW(&cred, 0);
+}
+#endif
+
+QString coach::storedKey(const QString &provider) const
+{
+    QSettings s = openSettings(m_sSettingsPath);
+    const QString inFile = s.value(key("apiKey", provider)).toString().trimmed();
+#ifdef Q_OS_WIN
+    const QString target = credentialTarget(provider);
+    if (!inFile.isEmpty()) {
+        // key of an earlier version, in clear in the file: moved to the Credential Manager
+        if (writeCredential(target, inFile)) {
+            s.remove(key("apiKey", provider));
+            s.sync();
+        }
+        return inFile;
+    }
+    return readCredential(target).trimmed();
+#else
+    return inFile;
+#endif
+}
+
+void coach::storeKey(const QString &provider, const QString &apiKey) const
+{
+    QSettings s = openSettings(m_sSettingsPath);
+#ifdef Q_OS_WIN
+    if (writeCredential(credentialTarget(provider), apiKey.trimmed())) {
+        s.remove(key("apiKey", provider)); // never in clear in the file
+        s.sync();
+        return;
+    }
+#endif
+    if (apiKey.trimmed().isEmpty())
+        s.remove(key("apiKey", provider));
+    else
+        s.setValue(key("apiKey", provider), apiKey.trimmed());
+    s.sync();
 }
 
 bool coach::isKnownProvider(const QString &provider)
@@ -85,8 +168,7 @@ QString coach::key(const QString &name, const QString &provider) const
 bool coach::hasKey(const QString &provider) const
 {
     const QString p = provider.isEmpty() ? this->provider() : provider;
-    QSettings s = openSettings(m_sSettingsPath);
-    return !s.value(key("apiKey", p)).toString().trimmed().isEmpty();
+    return !storedKey(p).isEmpty();
 }
 
 QString coach::model(const QString &provider) const
@@ -120,8 +202,7 @@ bool coach::hasConsent() const
 QString coach::maskedKey(const QString &provider) const
 {
     const QString p = provider.isEmpty() ? this->provider() : provider;
-    QSettings s = openSettings(m_sSettingsPath);
-    const QString k = s.value(key("apiKey", p)).toString().trimmed();
+    const QString k = storedKey(p);
     if (k.isEmpty())
         return QString();
     if (k.length() <= 12)
@@ -132,12 +213,7 @@ QString coach::maskedKey(const QString &provider) const
 void coach::setKey(const QString &apiKey, const QString &provider)
 {
     const QString p = provider.isEmpty() ? this->provider() : provider;
-    QSettings s = openSettings(m_sSettingsPath);
-    if (apiKey.trimmed().isEmpty())
-        s.remove(key("apiKey", p));
-    else
-        s.setValue(key("apiKey", p), apiKey.trimmed());
-    s.sync();
+    storeKey(p, apiKey);
 }
 
 void coach::setModel(const QString &model, const QString &provider)
@@ -339,8 +415,7 @@ void coach::ask(const QString &system, const QString &user, int maxTokens, doubl
         emit failed(tr("No API key: enter it in Configuration > AI coach."));
         return;
     }
-    QSettings s = openSettings(m_sSettingsPath);
-    const QString apiKey = s.value(key("apiKey", provider())).toString().trimmed();
+    const QString apiKey = storedKey(provider());
 
     QNetworkRequest request{QUrl(requestUrl())};
     request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");

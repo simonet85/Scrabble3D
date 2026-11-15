@@ -52,7 +52,9 @@
   officielle du serveur et propose les dictionnaires et traductions plus récents, ou dit que tout est à jour (la
   vérification automatique reste hebdomadaire). Les mots importés sont gardés dans `<dictionnaire>.imported.txt` :
   après une mise à jour du dictionnaire, ils sont ajoutés de nouveau à la nouvelle édition.
-- [ ] 11. Clés d'API chiffrées (gestionnaire d'identifiants de Windows) au lieu de `coach.ini` en clair.
+- [x] **11. Clés d'API chiffrées.** Sous Windows, les clés du coach sont dans le gestionnaire d'identifiants
+  (« Scrabble3D coach/<service>/<dossier de configuration> »), plus dans `coach.ini`. Une clé encore en clair dans
+  `coach.ini` y est déplacée à sa première lecture. Les autres systèmes gardent `coach.ini`.
 
 ### Réseau et technique
 - [ ] 12. Connexion chiffrée au serveur ; abandon et tirage au sort en partie réseau.
