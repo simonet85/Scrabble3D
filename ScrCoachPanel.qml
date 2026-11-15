@@ -7,13 +7,15 @@ Item {
     id: panel
 
     property bool newEntry: false //red dot on the tab when the coach has something new
+    // shown to the user: in the mobile layout the pages of the SwipeView stay visible when they are not the current one
+    readonly property bool shown: visible && (SwipeView.view ? SwipeView.isCurrentItem : true)
 
     Connections {
         target: GamePlay.coachModel
-        function onRowsInserted() { if (!panel.visible) panel.newEntry = true }
-        function onDataChanged() { if (!panel.visible) panel.newEntry = true }
+        function onRowsInserted() { if (!panel.shown) panel.newEntry = true }
+        function onDataChanged() { if (!panel.shown) panel.newEntry = true }
     }
-    onVisibleChanged: if (visible) newEntry = false
+    onShownChanged: if (shown) newEntry = false
 
     function kindText(kind) {
         return kind === "auto" ? qsTr("Advice (automatic)")

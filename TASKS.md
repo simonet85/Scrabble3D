@@ -45,7 +45,9 @@
   coup retiré après contestation retire aussi ses jokers.
 
 ### Coach et dictionnaire
-- [ ] 9. Onglet Coach dans la mise en page mobile.
+- [x] **9. Onglet Coach en mise en page mobile.** La mise en page portrait a son onglet Coach (avec le point rouge
+  des nouveaux conseils) ; les actions du coach l'ouvrent comme sur ordinateur. Le panneau sait désormais s'il est
+  vraiment affiché : dans le SwipeView du portrait, les pages restent « visibles » même hors écran.
 - [x] **10. Mise à jour du dictionnaire.** Menu Aide → « Rechercher des mises à jour » : le jeu lit la liste
   officielle du serveur et propose les dictionnaires et traductions plus récents, ou dit que tout est à jour (la
   vérification automatique reste hebdomadaire). Les mots importés sont gardés dans `<dictionnaire>.imported.txt` :

@@ -7,7 +7,7 @@ ColumnLayout {
     property alias messages: messages
     property alias cube: cube
 
-    function showCoach() { } // the coach tab exists in the desktop layout only
+    function showCoach() { footerBar.setCurrentIndex(5) } // the Coach tab, called when the coach is asked
 
     anchors.fill: parent
 
@@ -106,6 +106,7 @@ ColumnLayout {
         ScrMessages { id: messages }
         ScrGameCourse { id: statistics }
         ScrPlayers { id: players; visible: GamePlay.isConnected }
+        ScrCoachPanel { id: coachPanel }
     }
     RoundButton {
         id: actionButton
@@ -180,8 +181,10 @@ ColumnLayout {
         id: footerBar
         Layout.fillWidth: true
         currentIndex: swipeView.currentIndex
-        onCurrentIndexChanged:
+        onCurrentIndexChanged: {
             if (currentIndex === 2) messages.newMessage = false
+            if (currentIndex === 5) coachPanel.newEntry = false
+        }
         TabButton {
             text: qsTr("Board")
             width: contentItem.implicitWidth + leftPadding + rightPadding
@@ -216,6 +219,20 @@ ColumnLayout {
             width: contentItem.implicitWidth + leftPadding + rightPadding
             visible: GamePlay.isConnected
             onVisibleChanged: visible ? footerBar.setCurrentIndex(4) : footerBar.setCurrentIndex(0)
+        }
+        TabButton {
+            text: qsTr("Coach")
+            width: contentItem.implicitWidth + leftPadding + 2*rightPadding
+            indicator: Rectangle { // red dot when the coach has something new
+                property int size: 5
+                width: size; height: size; radius: size
+                anchors.right: parent.right
+                anchors.top: parent.top
+                anchors.rightMargin: 2
+                anchors.topMargin: 2
+                color: "#FF0000"
+                visible: coachPanel.newEntry && footerBar.currentIndex !== 5
+            }
         }
     }
     ScrStatusbar { id: footerBarPt }
