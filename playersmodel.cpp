@@ -364,6 +364,24 @@ const clientInfo playersTree::playerData(QString name)
         return {};
 }
 
+bool playersTree::groupSupports(const QString name, const QString feature) const
+{
+    int nLocal = -1;
+    for (int i = 0; i < m_lPlayers.count(); i++)
+        if (m_lPlayers.at(i).playerName == name) { nLocal = i; break; }
+    if (nLocal < 0)
+        return false;
+    int members = 0;
+    for (int i = 0; i < m_lPlayers.count(); i++)
+        if (m_lPlayers.at(i).groupID == m_lPlayers.at(nLocal).groupID) {
+            members++;
+            // release "4.0.13-fisf1_Windows": the features come before the platform
+            if (!m_lPlayers.at(i).release.section(QLatin1Char('_'), 0, 0).split(QLatin1Char('-')).contains(feature))
+                return false;
+        }
+    return members >= 2;
+}
+
 const QString playersTree::groupData(QString name)
 {
     int nLocalPlayer = playerIndex(name);

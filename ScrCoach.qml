@@ -65,7 +65,7 @@ Dialog {
             wrapMode: Text.WordWrap
             font.pixelSize: 12
             color: "#b00020"
-            text: qsTr("The key is stored in a file of your user profile (coach.ini), not encrypted. The coach sends the board, your rack and the best moves to the online service, which may charge your key. Nothing is sent as long as you do not ask the coach.")
+            text: qsTr("The key is stored encrypted in the Windows Credential Manager (not in coach.ini). The coach sends the board, your rack and the best moves to the online service, which may charge your key. Nothing is sent as long as you do not ask the coach.")
         }
         Button {
             text: qsTr("Remove the saved key")

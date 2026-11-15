@@ -60,6 +60,7 @@ public:
     void clearAll();
     const clientInfo playerData(QString name);
     const QString groupData(QString name);
+    bool groupSupports(const QString name, const QString feature) const; // every player of the group of name
 
 public slots:
     void doLogout(QString playerName);

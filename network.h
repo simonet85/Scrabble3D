@@ -2,7 +2,7 @@
 
 #include <QtNetwork>
 
-class network : public QTcpSocket
+class network : public QSslSocket
 {
     Q_OBJECT
 
@@ -30,6 +30,7 @@ public:
 //        nwEndGame,       // obsolete; was the message to run the final reckoning
         nwGameResult,    // updates rating; also sets GameEnd flag in saved game on game server, returns message with new rating
         nwBestValues,
+        nwResign,        // FISF 4.11 in network games: Step=ask / Step=answer with Answer=true|false
 
         /*
     'nwPause'        : acPauseExecute(nil);
@@ -53,7 +54,8 @@ public:
             const QString country = "",
             const QString city = "",
             const QString lang = "");
-    void connect(const QString sHostname, const uint iPort); //connect to host and send nwConnect message
+    void connect(const QString sHostname, const uint iPort, const bool bEncrypted = false); //connect to host and send nwConnect message
+    bool isEncrypted() const { return m_bEncrypted; }
     const QString localPlayerName() { return m_sName; }
     bool isConnected() { return m_bIsConnected; }
 
@@ -79,10 +81,12 @@ signals:
     void onRemoteGames(QVariantMap aMsg); //gameplay
     void onAnswer(QVariantMap aMsg); //gameplay
     void onGameResult(int oldRating, int newRating); //gameplay
+    void onResign(QVariantMap aMsg); //gameplay
 
 private slots:
     void doConnected();
     void doReadyRead();
+    void doSslErrors(const QList<QSslError> &errors);
 
 private:
     QObject *m_pParent;
@@ -93,6 +97,7 @@ private:
     QString m_sCountry;
     QString m_sCity;
     QString m_sLanguage;
+    bool m_bEncrypted = false;
 
     QByteArray m_aData;
     bool m_bIsConnected;

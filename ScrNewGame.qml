@@ -40,6 +40,7 @@ Dialog {
                                "isComputer": false})
         seed = configData["seed"] || -1
         cbRandomized.checked = true
+        cbDrawFirst.checked = configData["drawFirst"] === "true" // decided by the client that starts the game
     }
 
     ListModel {

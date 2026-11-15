@@ -75,6 +75,7 @@ RESOURCES += \
 TARGET = Scrabble3D
 
 win32: LIBS += -lwinmm # sound of the Scrabble (PlaySound)
+win32: LIBS += -ladvapi32 # API keys of the coach in the Credential Manager
 
 QML_IMPORT_NAME = Scrabble3D
 QML_IMPORT_MAJOR_VERSION = 4

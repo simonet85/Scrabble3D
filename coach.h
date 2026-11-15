@@ -73,6 +73,11 @@ signals:
 
 private:
     QString key(const QString &name, const QString &provider) const; // settings key of a provider
+    // the API key: Windows Credential Manager (encrypted for the user), coach.ini elsewhere;
+    // a key found in clear in coach.ini (earlier versions) is moved to the Credential Manager
+    QString storedKey(const QString &provider) const;
+    void storeKey(const QString &provider, const QString &apiKey) const;
+    QString credentialTarget(const QString &provider) const;
     void post(const QNetworkRequest &request, const QByteArray &payload, int attempt);
     int m_nRetryDelay = 2000;
     QByteArray m_sSession; // identifies this run of the application for OpenCode (header x-opencode-session)
