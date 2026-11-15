@@ -17,6 +17,7 @@ SOURCES += \
         gamereview.cpp \
         gameplay_hint.cpp \
         gameplay_sanction.cpp \
+        gameplay_sheet.cpp \
         frenchsupplement.cpp \
         computelevel.cpp \
         cubemodel.cpp \
