@@ -277,6 +277,12 @@ ApplicationWindow {
         onTriggered: sanctionDialog.open()
     }
     Action {
+        id: acExportSheet
+        text: qsTr("Export match sheet...")
+        enabled: GamePlay.isInitialized && GamePlay.currentMove > 0
+        onTriggered: sheetDialog.open()
+    }
+    Action {
         id: acDictionary
         text: qsTr("Word Search")
         enabled: !GamePlay.isConnected || !GamePlay.isRunning
@@ -324,6 +330,16 @@ ApplicationWindow {
         onAccepted: fileMode === FileDialog.OpenFile
                         ? doLoad(file)
                         : GamePlay.saveGame(file)}
+
+    FileDialog {
+        id: sheetDialog
+        title: qsTr("Export the match sheet")
+        folder: StandardPaths.writableLocation(StandardPaths.DocumentsLocation)
+        nameFilters: [qsTr("PDF document (*.pdf)"), qsTr("Spreadsheet (*.csv)"), qsTr("Web page (*.html)")]
+        defaultSuffix: "pdf"
+        fileMode: FileDialog.SaveFile
+        onAccepted: GamePlay.exportMatchSheet(file)
+    }
 
     FileDialog {
         id: importWordsDialog

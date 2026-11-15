@@ -217,6 +217,7 @@ public:
     Q_INVOKABLE void sanction(int player, const QString &reason); // FISF 6.4: graded sanction of an infraction
     Q_INVOKABLE QString nextSanction(int player);  // what the next infraction of the player leads to
     Q_INVOKABLE bool canSanction();
+    Q_INVOKABLE bool exportMatchSheet(const QUrl &fileUrl); // FISF 1.1.5 and 5.3: PDF, CSV or HTML by suffix
     Q_INVOKABLE void deleteDictionary(const QString fileName) { m_pDicListModel->deleteDic(fileName); }
     Q_INVOKABLE void setCategoryChecked(const QString catName, const bool isChecked, const bool doReset = false)
         { m_pDictionary->setCategoryChecked(catName,isChecked);
@@ -439,6 +440,12 @@ private:
     QList<int> m_nInfractions;                // infractions per player in this game (FISF 6.4)
     QList<SanctionEntry> m_lSanctions;        // sanctions of this game, for the match sheet
     QString sanctionText(int level) const;
+    struct SheetRow { int number = 0; int player = -1; QString word; int value = 0; int total = 0; };
+    struct SheetData { QList<SheetRow> rows; QStringList names; QList<int> scores; QList<int> adjustments;
+                       QStringList jokers; QStringList winners; int difference = -1; bool finished = false; };
+    SheetData sheetData();
+    QString matchSheetCsv();
+    QString matchSheetHtml();
     QString drawFirstPlayer(const QVariantList &aLetterList, long nSeed); // FISF 2.1; reorders m_lPlayerNames
     bool m_bIsCLABBERS;                       // FEATURE: gameplay: whether CLABBER variant is allowed
     uint m_nPerformance;                      // absolute value: 0 = always the best word; >0 = randomly picked => doComputeMove()

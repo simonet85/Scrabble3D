@@ -38,7 +38,10 @@
   50 points, puis match perdu (score à 0, la partie se termine). Chaque sanction est annoncée dans les messages ;
   les compteurs repartent à zéro à chaque nouvelle partie. Pas en partie réseau. Les sanctions ne sont pas
   enregistrées avec la partie sauvegardée.
-- [ ] 7 bis. Export de la feuille de match (PDF ou CSV) — laissé de côté pour l'instant.
+- [x] **7 bis. Export de la feuille de match.** Menu Partie → « Exporter la feuille de match... » : PDF, CSV
+  (tableur) ou page web. Coups avec le cumul de chaque joueur, ajustements de fin de partie, scores finaux, écart
+  plafonné à 100 points (§5.3), vainqueur, jokers avec la lettre représentée (§1.1.5), sanctions et motifs (§6.4),
+  lignes de signature.
 - [x] **8. Déclaration du joker (§3.1.4).** Le sélecteur oblige déjà à choisir la lettre du joker ; chaque joker
   posé est maintenant annoncé (« X joue un joker comme S dans LYSEZ (H10) ») et noté avec le coup, le joueur et
   la case. En fin de partie (normale, abandon ou match perdu), le relevé des jokers suit la feuille de match. Un

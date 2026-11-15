@@ -42,6 +42,7 @@ ColumnLayout {
             LongMenuItem { action: acChallenge }
             LongMenuItem { action: acResign }
             LongMenuItem { action: acSanction }
+            LongMenuItem { action: acExportSheet }
             LongMenuItem { action: acCoachExplain }
             LongMenuItem { action: acCoachDefine }
             LongMenuItem { action: acGameReview }
